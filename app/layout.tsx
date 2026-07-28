@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Interval - Vacation Ownership & Resort Exchange",
   description: "Private resort booking platform",
+  icons: {
+    icon: "/faveicon.png",
+  },
 };
 
 export default function RootLayout({
