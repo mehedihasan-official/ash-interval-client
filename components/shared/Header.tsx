@@ -4,11 +4,13 @@
 // plus a mobile slide-out menu. Colors match the reference brand theme:
 // navy (#18294B) for nav bars, blue (#0077be / #1a6fa8) for links/buttons.
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FaBars } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import { useAuth } from "@/lib/providers/AuthProvider";
+import headerBanner from "@/public/desktop-header-part.png";
 
 // Nav items shown once a regular (non-admin) user is logged in.
 const userMenuItems = [
@@ -74,24 +76,27 @@ const Header = () => {
         {/* Logo + auth buttons row — desktop, logged out */}
         {!user && (
           <div className="hidden md:block w-full bg-white">
-            <div className="max-w-[980px] mx-auto grid grid-cols-12 items-center">
-              <div className="col-span-9">
-                <Link href="/">
-                  <span className="text-2xl font-bold text-[#18294B] py-6 block">
-                    Interval
-                  </span>
-                </Link>
-              </div>
-              <div className="col-span-3 flex justify-center items-center gap-2 pr-4">
+            <div className="max-w-[980px] mx-auto flex items-center justify-between py-4">
+              <Link href="/" className="relative h-[75px] w-[500px] shrink-0">
+                <Image
+                  src={headerBanner}
+                  alt="Interval - 50 Years"
+                  fill
+                  priority
+                  sizes="500px"
+                  className="object-contain object-left"
+                />
+              </Link>
+              <div className="flex items-center gap-3 pr-4 shrink-0">
                 <Link
                   href="/create-profile"
-                  className="text-[#1a6fa8] text-xs hover:underline font-medium"
+                  className="text-[#1a6fa8] text-sm hover:underline font-medium"
                 >
                   Create Profile
                 </Link>
                 <Link
                   href="/login"
-                  className="bg-[#0077be] text-white text-sm font-bold px-6 py-2 rounded hover:bg-[#005a8e] transition shadow-sm"
+                  className="bg-[#0077be] text-white text-sm font-bold px-6 py-2.5 rounded hover:bg-[#005a8e] transition shadow-sm"
                 >
                   Sign In
                 </Link>
@@ -143,9 +148,17 @@ const Header = () => {
         </nav>
 
         {/* Mobile header bar */}
-        <div className="md:hidden flex items-center justify-between px-3 py-3 bg-[#18294B]">
-          <Link href="/">
-            <span className="text-white text-lg font-bold">Interval</span>
+        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18294B]">
+          <Link href="/" className="flex items-baseline gap-1.5">
+            <span className="text-white text-lg font-bold lowercase tracking-tight">
+              interval
+            </span>
+            <span className="text-white text-xs font-semibold flex items-baseline gap-0.5">
+              5<span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-white" />
+            </span>
+            <span className="text-white/80 text-[10px] font-medium tracking-wide">
+              YEARS
+            </span>
           </Link>
           <button
             onClick={() => setIsMenuOpen(true)}

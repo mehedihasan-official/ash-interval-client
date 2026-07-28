@@ -1,4 +1,12 @@
 // Homepage content shown below the carousel to logged-out visitors.
+// Mobile and desktop are deliberately different layouts:
+//   - Mobile mirrors the compact "app menu" style reference: a plain
+//     list of nav rows (Login / Resort Directory / Interval HD /
+//     Create a Profile / Join Today) each with a chevron, followed by
+//     social icons and a "View Full Site" link.
+//   - Desktop mirrors the intervalworld.com-style layout: an "Important
+//     Member Information" notice, a 4-tile image grid, a resort
+//     directory link list next to an IntervalHD promo box, then socials.
 import exchangeBanner from "@/app/asset/images/exchange-banner.jpg";
 import getawaysBanner from "@/app/asset/images/getaways-banner.jpg";
 import homeSlider4 from "@/app/asset/images/home-slider-4.jpg";
@@ -6,6 +14,12 @@ import intervalTravelBanner from "@/app/asset/images/interval_travel-banner.jpg"
 import Image from "next/image";
 import Link from "next/link";
 import { IoIosArrowForward } from "react-icons/io";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaYoutube,
+  FaPinterestP,
+} from "react-icons/fa";
 
 const featureTiles = [
   {
@@ -30,28 +44,35 @@ const featureTiles = [
   },
 ];
 
-const mobileHighlights = [
-  {
-    title: "Resort Directory",
-    description: "Browse resorts and find your next stay.",
-    href: "/resort-directory",
-    image: homeSlider4,
-  },
-  {
-    title: "Create a Profile",
-    description: "Set up your account and plan with confidence.",
-    href: "/create-profile",
-    image: intervalTravelBanner,
-  },
+const resortDestinations = [
+  ["Aruba", "Cancun, Mexico", "St. Maarten", "Puerto Vallarta, Mexico"],
+  ["Orlando, Florida", "Williamsburg, Virginia", "Poconos, Pennsylvania", "Las Vegas, Nevada"],
+  ["Palm Springs, California", "Phoenix, Arizona", "Hawaiian Islands", "Costa del Sol, Spain"],
+  ["Paris, France", "Australia", "Asia", "View All"],
+];
+
+const socialLinks = [
+  { icon: FaFacebookF, label: "Facebook" },
+  { icon: FaInstagram, label: "Instagram" },
+  { icon: FaYoutube, label: "YouTube" },
+  { icon: FaPinterestP, label: "Pinterest" },
+];
+
+const mobileMenuRows = [
+  { label: "Login", href: "/login" },
+  { label: "Resort Directory", href: "/resort-directory" },
+  { label: "Interval HD", href: "/resort-directory" },
+  { label: "Create a Profile", href: "/create-profile" },
+  { label: "Join Today", href: "/create-profile" },
 ];
 
 const DesktopContent = () => (
-  <div className="hidden md:block">
-    <div className="mx-auto max-w-245 px-4 py-8">
+  <div className="hidden md:block bg-white">
+    <div className="mx-auto max-w-[980px] px-4 py-8">
       <h2 className="text-[#1a6fa8] text-2xl font-semibold mb-2">
         Important Member Information
       </h2>
-      <p className="text-sm text-gray-700 leading-relaxed max-w-225">
+      <p className="text-sm text-gray-700 leading-relaxed max-w-[820px]">
         The safety and well-being of our members is our top priority. Please
         refer to our{" "}
         <a href="#" className="text-[#1a6fa8] underline font-bold">
@@ -63,23 +84,23 @@ const DesktopContent = () => (
       </p>
     </div>
 
-    <div className="mx-auto max-w-245 px-4 pb-10">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="mx-auto max-w-[980px] px-4 pb-8">
+      <div className="grid grid-cols-4 gap-3">
         {featureTiles.map((tile) => (
           <Link
             key={tile.label}
             href={tile.href}
-            className="group relative overflow-hidden rounded-xl border border-gray-100 shadow-sm h-40 sm:h-44"
+            className="group relative overflow-hidden h-36 lg:h-40"
           >
             <Image
               src={tile.image}
               alt={tile.label}
               fill
-              sizes="(max-width: 768px) 100vw, 25vw"
+              sizes="25vw"
               className="object-cover transition duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-black/35 to-black/70" />
-            <span className="absolute inset-0 flex items-start p-4 text-white font-bold text-lg drop-shadow-md">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+            <span className="absolute inset-x-0 bottom-0 p-3 text-white font-bold text-base drop-shadow-md">
               {tile.label}
             </span>
           </Link>
@@ -87,81 +108,147 @@ const DesktopContent = () => (
       </div>
     </div>
 
-    <div className="mx-auto max-w-245 px-4 pb-8">
-      <div className="bg-[#f8f9fa] border border-gray-200 p-6 rounded-sm">
-        <h3 className="text-[#1a6fa8] font-bold text-xl mb-2">
-          Explore Our Resort Directory
-        </h3>
-        <p className="text-sm text-gray-700 mb-3">
-          Browse resorts by destination and find your next stay.
-        </p>
+    <div className="mx-auto max-w-[980px] px-4 pb-10">
+      <div className="grid grid-cols-12 gap-4">
+        {/* Resort directory list */}
+        <div className="col-span-9 bg-[#f5f5f5] border border-gray-200 p-5">
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
+            <div className="pr-4 border-r border-gray-300">
+              <h3 className="text-[#1a6fa8] font-bold text-lg leading-tight mb-1">
+                Interval&apos;s Resort Directory
+              </h3>
+              <Link
+                href="/resort-directory"
+                className="text-xs text-gray-600 hover:underline"
+              >
+                Download Interval App
+              </Link>
+            </div>
+            {resortDestinations.map((col, i) => (
+              <ul key={i} className="text-sm space-y-1.5 min-w-[130px]">
+                {col.map((place) =>
+                  place === "View All" ? (
+                    <li key={place}>
+                      <Link
+                        href="/resort-directory"
+                        className="text-[#1a6fa8] font-bold hover:underline"
+                      >
+                        View All
+                      </Link>
+                    </li>
+                  ) : (
+                    <li key={place}>
+                      <Link
+                        href="/resort-directory"
+                        className="text-gray-700 hover:text-[#1a6fa8] hover:underline"
+                      >
+                        {place}
+                      </Link>
+                    </li>
+                  )
+                )}
+              </ul>
+            ))}
+          </div>
+        </div>
+
+        {/* IntervalHD promo box */}
         <Link
           href="/resort-directory"
-          className="text-[#1a6fa8] font-bold hover:underline text-sm"
+          className="col-span-3 bg-white border border-gray-200 flex flex-col items-center justify-center text-center p-4 hover:border-[#1a6fa8] transition"
         >
-          View All Resorts &rarr;
+          <span className="text-[#18294B] font-bold text-xl leading-none">
+            interval<span className="text-[#0077be]">HD</span>
+          </span>
+          <span className="text-xs text-gray-500 mt-1 mb-3">
+            Now with helpful videos.
+          </span>
+          <span className="bg-[#f5a623] text-[#18294B] text-xs font-bold px-4 py-1.5 rounded-full">
+            Learn more
+          </span>
         </Link>
       </div>
     </div>
 
-    <div className="mx-auto max-w-245 px-4 py-6 border-t border-gray-100 text-[10px] text-gray-500 flex flex-wrap justify-between gap-4">
-      <p>Copyright © 2026 Interval. All rights reserved.</p>
+    {/* Social icons */}
+    <div className="mx-auto max-w-[980px] px-4 pb-8 flex items-center justify-center gap-3">
+      <span className="h-px bg-gray-200 grow" />
+      {socialLinks.map(({ icon: Icon, label }) => (
+        <a
+          key={label}
+          href="#"
+          aria-label={label}
+          className="h-9 w-9 rounded-full bg-[#18294B] text-white flex items-center justify-center hover:bg-[#0077be] transition shrink-0"
+        >
+          <Icon className="text-sm" />
+        </a>
+      ))}
+      <span className="h-px bg-gray-200 grow" />
+    </div>
+
+    <div className="mx-auto max-w-[980px] px-4 py-6 border-t border-gray-100 text-[10px] text-gray-500 flex flex-wrap justify-between gap-4">
+      <p>Copyright © 2026 Interval International. All rights reserved.</p>
     </div>
   </div>
 );
 
 const MobileContent = () => (
-  <div className="md:hidden px-3 pb-6">
-    <div className="mt-2 space-y-3">
-      {mobileHighlights.map((item) => (
+  <div className="md:hidden bg-white">
+    <div className="px-4">
+      {mobileMenuRows.map((item) => (
         <Link
-          key={item.title}
+          key={item.label}
           href={item.href}
-          className="block overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+          className="flex items-center justify-between py-4 border-b border-gray-200"
         >
-          <div className="relative h-32 w-full">
-            <Image
-              src={item.image}
-              alt={item.title}
-              fill
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-gray-900">
-                {item.title}
-              </p>
-              <p className="text-xs text-gray-600">{item.description}</p>
-            </div>
-            <IoIosArrowForward className="text-[#1a6fa8] text-lg" />
-          </div>
+          <span className="text-[#18294B] text-base">{item.label}</span>
+          <IoIosArrowForward className="text-[#0077be] text-lg shrink-0" />
         </Link>
       ))}
+    </div>
 
-      <Link
-        href="/login"
-        className="flex items-center justify-between border-t border-gray-200 py-3 px-1 hover:bg-gray-50"
+    {/* Social icons */}
+    <div className="flex items-center justify-center gap-4 py-6">
+      {socialLinks.map(({ icon: Icon, label }) => (
+        <a
+          key={label}
+          href="#"
+          aria-label={label}
+          className="h-9 w-9 rounded-full bg-[#18294B] text-white flex items-center justify-center"
+        >
+          <Icon className="text-sm" />
+        </a>
+      ))}
+    </div>
+
+    <div className="text-center pb-5">
+      <a
+        href="#"
+        className="text-[#18294B] font-bold text-sm tracking-wide"
       >
-        <span className="text-gray-800 text-sm">Login</span>
-        <IoIosArrowForward className="text-[#1a6fa8] text-lg" />
-      </Link>
-      <Link
-        href="/resort-directory"
-        className="flex items-center justify-between border-t border-gray-200 py-3 px-1 hover:bg-gray-50"
-      >
-        <span className="text-gray-800 text-sm">Resort Directory</span>
-        <IoIosArrowForward className="text-[#1a6fa8] text-lg" />
-      </Link>
-      <Link
-        href="/create-profile"
-        className="flex items-center justify-between border-t border-b border-gray-200 py-3 px-1 hover:bg-gray-50"
-      >
-        <span className="text-gray-800 text-sm">Create a Profile</span>
-        <IoIosArrowForward className="text-[#1a6fa8] text-lg" />
-      </Link>
+        VIEW FULL SITE
+      </a>
+    </div>
+
+    <div className="border-t border-gray-200 px-4 py-4 text-center">
+      <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-xs text-[#1a6fa8] mb-3">
+        <a href="#" className="hover:underline">About Us</a>
+        <span className="text-gray-400">|</span>
+        <a href="#" className="hover:underline">Privacy &amp; Cookie Policies</a>
+        <span className="text-gray-400">|</span>
+        <a href="#" className="hover:underline">Cookie Settings</a>
+        <br className="w-full" />
+        <a href="#" className="hover:underline">Do Not Sell/Share</a>
+        <span className="text-gray-400">|</span>
+        <a href="#" className="hover:underline">Legal</a>
+        <span className="text-gray-400">|</span>
+        <a href="#" className="hover:underline">Accessibility</a>
+        <span className="text-gray-400">|</span>
+        <a href="#" className="hover:underline">Support</a>
+      </div>
+      <p className="text-[11px] text-gray-500">
+        Copyright © 2026 Interval International. All rights reserved.
+      </p>
     </div>
   </div>
 );
