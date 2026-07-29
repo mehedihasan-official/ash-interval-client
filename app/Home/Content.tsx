@@ -67,15 +67,15 @@ const mobileMenuRows = [
 ];
 
 const DesktopContent = () => (
-  <div className="hidden md:block bg-white">
+  <div className="hidden md:block bg-white dark:bg-[#0f172a]">
     <div className="mx-auto max-w-[980px] px-4 py-8">
-      <h2 className="text-[#1a6fa8] text-2xl font-semibold mb-2">
+      <h2 className="text-[#1a6fa8] dark:text-[#7fb8e6] text-2xl font-semibold mb-2">
         Important Member Information
       </h2>
-      <p className="text-sm text-gray-700 leading-relaxed max-w-[820px]">
+      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed max-w-[820px]">
         The safety and well-being of our members is our top priority. Please
         refer to our{" "}
-        <a href="#" className="text-[#1a6fa8] underline font-bold">
+        <a href="#" className="text-[#1a6fa8] dark:text-[#7fb8e6] underline font-bold">
           Travel Advisories
         </a>{" "}
         page for information regarding resort closures. The page is updated
@@ -111,15 +111,15 @@ const DesktopContent = () => (
     <div className="mx-auto max-w-[980px] px-4 pb-10">
       <div className="grid grid-cols-12 gap-4">
         {/* Resort directory list */}
-        <div className="col-span-9 bg-[#f5f5f5] border border-gray-200 p-5">
+        <div className="col-span-9 bg-[#f5f5f5] dark:bg-[#16223d] border border-gray-200 dark:border-white/10 p-5">
           <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
-            <div className="pr-4 border-r border-gray-300">
-              <h3 className="text-[#1a6fa8] font-bold text-lg leading-tight mb-1">
+            <div className="pr-4 border-r border-gray-300 dark:border-white/10">
+              <h3 className="text-[#1a6fa8] dark:text-[#7fb8e6] font-bold text-lg leading-tight mb-1">
                 Interval&apos;s Resort Directory
               </h3>
               <Link
                 href="/resort-directory"
-                className="text-xs text-gray-600 hover:underline"
+                className="text-xs text-gray-600 dark:text-gray-400 hover:underline"
               >
                 Download Interval App
               </Link>
@@ -131,7 +131,7 @@ const DesktopContent = () => (
                     <li key={place}>
                       <Link
                         href="/resort-directory"
-                        className="text-[#1a6fa8] font-bold hover:underline"
+                        className="text-[#1a6fa8] dark:text-[#7fb8e6] font-bold hover:underline"
                       >
                         View All
                       </Link>
@@ -140,7 +140,7 @@ const DesktopContent = () => (
                     <li key={place}>
                       <Link
                         href="/resort-directory"
-                        className="text-gray-700 hover:text-[#1a6fa8] hover:underline"
+                        className="text-gray-700 dark:text-gray-300 hover:text-[#1a6fa8] dark:hover:text-[#7fb8e6] hover:underline"
                       >
                         {place}
                       </Link>
@@ -155,12 +155,12 @@ const DesktopContent = () => (
         {/* IntervalHD promo box */}
         <Link
           href="/resort-directory"
-          className="col-span-3 bg-white border border-gray-200 flex flex-col items-center justify-center text-center p-4 hover:border-[#1a6fa8] transition"
+          className="col-span-3 bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 flex flex-col items-center justify-center text-center p-4 hover:border-[#1a6fa8] dark:hover:border-[#7fb8e6] transition"
         >
-          <span className="text-[#18294B] font-bold text-xl leading-none">
-            interval<span className="text-[#0077be]">HD</span>
+          <span className="text-[#18294B] dark:text-white font-bold text-xl leading-none">
+            interval<span className="text-[#0077be] dark:text-[#3ba0ea]">HD</span>
           </span>
-          <span className="text-xs text-gray-500 mt-1 mb-3">
+          <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3">
             Now with helpful videos.
           </span>
           <span className="bg-[#f5a623] text-[#18294B] text-xs font-bold px-4 py-1.5 rounded-full">
@@ -172,37 +172,37 @@ const DesktopContent = () => (
 
     {/* Social icons */}
     <div className="mx-auto max-w-[980px] px-4 pb-8 flex items-center justify-center gap-3">
-      <span className="h-px bg-gray-200 grow" />
+      <span className="h-px bg-gray-200 dark:bg-white/10 grow" />
       {socialLinks.map(({ icon: Icon, label }) => (
         <a
           key={label}
           href="#"
           aria-label={label}
-          className="h-9 w-9 rounded-full bg-[#18294B] text-white flex items-center justify-center hover:bg-[#0077be] transition shrink-0"
+          className="h-9 w-9 rounded-full bg-[#18294B] dark:bg-[#1c2b4a] text-white flex items-center justify-center hover:bg-[#0077be] dark:hover:bg-[#3ba0ea] transition shrink-0"
         >
           <Icon className="text-sm" />
         </a>
       ))}
-      <span className="h-px bg-gray-200 grow" />
+      <span className="h-px bg-gray-200 dark:bg-white/10 grow" />
     </div>
 
-    <div className="mx-auto max-w-[980px] px-4 py-6 border-t border-gray-100 text-[10px] text-gray-500 flex flex-wrap justify-between gap-4">
+    <div className="mx-auto max-w-[980px] px-4 py-6 border-t border-gray-100 dark:border-white/10 text-[10px] text-gray-500 dark:text-gray-400 flex flex-wrap justify-between gap-4">
       <p>Copyright © 2026 Interval International. All rights reserved.</p>
     </div>
   </div>
 );
 
 const MobileContent = () => (
-  <div className="md:hidden bg-white">
+  <div className="md:hidden bg-white dark:bg-[#0f172a]">
     <div className="px-4">
       {mobileMenuRows.map((item) => (
         <Link
           key={item.label}
           href={item.href}
-          className="flex items-center justify-between py-4 border-b border-gray-200"
+          className="flex items-center justify-between py-4 border-b border-gray-200 dark:border-white/10"
         >
-          <span className="text-[#18294B] text-base">{item.label}</span>
-          <IoIosArrowForward className="text-[#0077be] text-lg shrink-0" />
+          <span className="text-[#18294B] dark:text-gray-100 text-base">{item.label}</span>
+          <IoIosArrowForward className="text-[#0077be] dark:text-[#7fb8e6] text-lg shrink-0" />
         </Link>
       ))}
     </div>
@@ -214,7 +214,7 @@ const MobileContent = () => (
           key={label}
           href="#"
           aria-label={label}
-          className="h-9 w-9 rounded-full bg-[#18294B] text-white flex items-center justify-center"
+          className="h-9 w-9 rounded-full bg-[#18294B] dark:bg-[#1c2b4a] text-white flex items-center justify-center"
         >
           <Icon className="text-sm" />
         </a>
@@ -224,29 +224,29 @@ const MobileContent = () => (
     <div className="text-center pb-5">
       <a
         href="#"
-        className="text-[#18294B] font-bold text-sm tracking-wide"
+        className="text-[#18294B] dark:text-gray-100 font-bold text-sm tracking-wide"
       >
         VIEW FULL SITE
       </a>
     </div>
 
-    <div className="border-t border-gray-200 px-4 py-4 text-center">
-      <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-xs text-[#1a6fa8] mb-3">
+    <div className="border-t border-gray-200 dark:border-white/10 px-4 py-4 text-center">
+      <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-xs text-[#1a6fa8] dark:text-[#7fb8e6] mb-3">
         <a href="#" className="hover:underline">About Us</a>
-        <span className="text-gray-400">|</span>
+        <span className="text-gray-400 dark:text-gray-600">|</span>
         <a href="#" className="hover:underline">Privacy &amp; Cookie Policies</a>
-        <span className="text-gray-400">|</span>
+        <span className="text-gray-400 dark:text-gray-600">|</span>
         <a href="#" className="hover:underline">Cookie Settings</a>
         <br className="w-full" />
         <a href="#" className="hover:underline">Do Not Sell/Share</a>
-        <span className="text-gray-400">|</span>
+        <span className="text-gray-400 dark:text-gray-600">|</span>
         <a href="#" className="hover:underline">Legal</a>
-        <span className="text-gray-400">|</span>
+        <span className="text-gray-400 dark:text-gray-600">|</span>
         <a href="#" className="hover:underline">Accessibility</a>
-        <span className="text-gray-400">|</span>
+        <span className="text-gray-400 dark:text-gray-600">|</span>
         <a href="#" className="hover:underline">Support</a>
       </div>
-      <p className="text-[11px] text-gray-500">
+      <p className="text-[11px] text-gray-500 dark:text-gray-400">
         Copyright © 2026 Interval International. All rights reserved.
       </p>
     </div>

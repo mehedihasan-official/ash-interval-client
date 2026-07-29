@@ -1,9 +1,31 @@
 import Footer from "@/components/shared/Footer";
-import Header from "@/components/shared/Header";
+
 import { AuthProvider } from "@/lib/providers/AuthProvider";
+import { ThemeProvider } from "@/lib/providers/ThemeProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/shared/Header";
+
+// Runs before React hydrates so the correct theme class is on <html>
+// from the very first paint — this is what prevents a flash of the
+// wrong (light/dark) theme on page load.
+const themeInitScript = `
+  (function () {
+    try {
+      var stored = window.localStorage.getItem("interval-theme");
+      var theme =
+        stored === "light" || stored === "dark"
+          ? stored
+          : window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+      var root = document.documentElement;
+      if (theme === "dark") root.classList.add("dark");
+      root.style.colorScheme = theme;
+    } catch (e) {}
+  })();
+`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,15 +54,22 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        {/* AuthProvider wraps everything so Header, Login, and every
-            future page can access the logged-in user via useAuth() */}
-        <AuthProvider>
-          <Header />
-          <main className="grow">{children}</main>
-          <Footer />
-        </AuthProvider>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body className="min-h-full flex flex-col bg-white dark:bg-[#0f172a] text-[#1a1a1a] dark:text-[#f1f5f9] transition-colors">
+        {/* ThemeProvider + AuthProvider wrap everything so Header, Login,
+            and every future page can access theme + logged-in user via
+            useTheme() / useAuth() */}
+        <ThemeProvider>
+          <AuthProvider>
+            <Header />
+            <main className="grow">{children}</main>
+            <Footer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

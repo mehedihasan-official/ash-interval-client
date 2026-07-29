@@ -2,7 +2,8 @@
 
 // Site header: shows a different nav for logged-out vs logged-in users,
 // plus a mobile slide-out menu. Colors match the reference brand theme:
-// navy (#18294B) for nav bars, blue (#0077be / #1a6fa8) for links/buttons.
+// navy (#18294B) for nav bars, blue (#0077be / #1a6fa8) for links/buttons,
+// with dark-mode equivalents so text/backgrounds stay readable either way.
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +12,7 @@ import { FaBars } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import headerBanner from "@/public/desktop-header-part.png";
+import ThemeToggle from "./ThemeToggle";
 
 // Nav items shown once a regular (non-admin) user is logged in.
 const userMenuItems = [
@@ -60,24 +62,27 @@ const Header = () => {
     <>
       {/* Top language bar — desktop only, hidden once logged in */}
       {!user && (
-        <div className="hidden md:flex justify-end items-center bg-[#f2f2f2] px-4 py-1.5 border-b border-gray-300">
+        <div className="hidden md:flex justify-end items-center bg-[#f2f2f2] dark:bg-[#16223d] px-4 py-1.5 border-b border-gray-300 dark:border-white/10">
           <div className="max-w-[980px] mx-auto w-full flex justify-end items-center">
-            <span className="text-gray-700 text-xs mr-2 font-medium">
+            <span className="text-gray-700 dark:text-gray-300 text-xs mr-2 font-medium">
               Language:
             </span>
-            <select className="text-xs bg-white border border-gray-300 rounded px-2 py-0.5 text-gray-700 outline-none">
+            <select className="text-xs bg-white dark:bg-[#1c2b4a] border border-gray-300 dark:border-white/20 rounded px-2 py-0.5 text-gray-700 dark:text-gray-200 outline-none">
               <option>English</option>
             </select>
           </div>
         </div>
       )}
 
-      <header className="bg-white sticky top-0 z-50">
+      <header className="bg-white dark:bg-[#0f172a] sticky top-0 z-50">
         {/* Logo + auth buttons row — desktop, logged out */}
         {!user && (
-          <div className="hidden md:block w-full bg-white">
+          <div className="hidden md:block w-full bg-white dark:bg-[#0f172a]">
             <div className="max-w-[980px] mx-auto flex items-center justify-between py-4">
-              <Link href="/" className="relative h-[75px] w-[500px] shrink-0">
+              <Link
+                href="/"
+                className="relative h-[75px] w-[500px] shrink-0 dark:bg-white dark:rounded-md dark:px-2"
+              >
                 <Image
                   src={headerBanner}
                   alt="Interval - 50 Years"
@@ -90,16 +95,17 @@ const Header = () => {
               <div className="flex items-center gap-3 pr-4 shrink-0">
                 <Link
                   href="/create-profile"
-                  className="text-[#1a6fa8] text-sm hover:underline font-medium"
+                  className="text-[#1a6fa8] dark:text-[#7fb8e6] text-sm hover:underline font-medium"
                 >
                   Create Profile
                 </Link>
                 <Link
                   href="/login"
-                  className="bg-[#0077be] text-white text-sm font-bold px-6 py-2.5 rounded hover:bg-[#005a8e] transition shadow-sm"
+                  className="bg-[#0077be] dark:bg-[#3ba0ea] text-white dark:text-[#0f172a] text-sm font-bold px-6 py-2.5 rounded hover:bg-[#005a8e] dark:hover:bg-[#62b4f0] transition shadow-sm"
                 >
                   Sign In
                 </Link>
+                <ThemeToggle variant="desktop" />
               </div>
             </div>
           </div>
@@ -109,19 +115,22 @@ const Header = () => {
         {user && (
           <div className="hidden md:flex items-center justify-between px-4 py-4 max-w-[980px] mx-auto">
             <Link href="/">
-              <span className="text-2xl font-bold text-[#18294B]">Interval</span>
+              <span className="text-2xl font-bold text-[#18294B] dark:text-white">Interval</span>
             </Link>
-            <button
-              onClick={handleLogout}
-              className="text-white bg-red-500 px-5 py-1.5 rounded text-sm font-medium hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLogout}
+                className="text-white bg-red-500 dark:bg-red-600 px-5 py-1.5 rounded text-sm font-medium hover:bg-red-600 dark:hover:bg-red-500 transition"
+              >
+                Logout
+              </button>
+              <ThemeToggle variant="desktop" />
+            </div>
           </div>
         )}
 
         {/* Desktop nav tabs */}
-        <nav className="hidden md:flex bg-[#18294B]">
+        <nav className="hidden md:flex bg-[#18294B] dark:bg-[#101b30]">
           <div className="max-w-[980px] mx-auto w-full flex">
             {user
               ? userMenuItems.map((item) => (
@@ -148,7 +157,7 @@ const Header = () => {
         </nav>
 
         {/* Mobile header bar */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18294B]">
+        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18294B] dark:bg-[#101b30]">
           <Link href="/" className="flex items-baseline gap-1.5">
             <span className="text-white text-lg font-bold lowercase tracking-tight">
               interval
@@ -180,11 +189,11 @@ const Header = () => {
 
       {/* Mobile slide-out sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white shadow-2xl z-[70] transform transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white dark:bg-[#16223d] shadow-2xl z-[70] transform transition-transform duration-300 md:hidden ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="bg-[#18294B] p-5 flex justify-between items-center">
+        <div className="bg-[#18294B] dark:bg-[#101b30] p-5 flex justify-between items-center">
           <span className="text-white font-bold text-lg">Interval</span>
           <button onClick={closeMenu} className="text-white" aria-label="Close menu">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,20 +208,23 @@ const Header = () => {
               href={item.path}
               key={item.name}
               onClick={closeMenu}
-              className={`px-5 py-3.5 text-gray-700 hover:bg-blue-50 flex justify-between items-center border-b border-gray-100 text-sm ${
-                pathname === item.path ? "bg-blue-50 text-[#1a6fa8] font-medium" : ""
+              className={`px-5 py-3.5 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-white/5 flex justify-between items-center border-b border-gray-100 dark:border-white/10 text-sm ${
+                pathname === item.path ? "bg-blue-50 dark:bg-white/10 text-[#1a6fa8] dark:text-[#7fb8e6] font-medium" : ""
               }`}
             >
               <span>{item.name}</span>
-              <IoIosArrowForward className="text-[#1a6fa8] flex-shrink-0" />
+              <IoIosArrowForward className="text-[#1a6fa8] dark:text-[#7fb8e6] flex-shrink-0" />
             </Link>
           ))}
+
+          {/* Dark/light mode toggle — sits with the rest of the menu items */}
+          <ThemeToggle variant="mobile" />
 
           <div className="p-5 mt-auto">
             {user ? (
               <button
                 onClick={handleLogout}
-                className="w-full text-white bg-red-500 py-3 rounded-lg font-bold hover:bg-red-600 transition"
+                className="w-full text-white bg-red-500 dark:bg-red-600 py-3 rounded-lg font-bold hover:bg-red-600 dark:hover:bg-red-500 transition"
               >
                 Logout
               </button>
@@ -220,7 +232,7 @@ const Header = () => {
               <Link
                 href="/login"
                 onClick={closeMenu}
-                className="block w-full text-center text-white bg-[#1a6fa8] py-3 rounded-lg font-bold hover:bg-[#155a8a] transition"
+                className="block w-full text-center text-white bg-[#1a6fa8] dark:bg-[#3ba0ea] dark:text-[#0f172a] py-3 rounded-lg font-bold hover:bg-[#155a8a] dark:hover:bg-[#62b4f0] transition"
               >
                 Sign In
               </Link>

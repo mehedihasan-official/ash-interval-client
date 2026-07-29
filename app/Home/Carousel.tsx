@@ -60,7 +60,7 @@ const Carousel = () => {
   return (
     <>
       {/* ---------- Mobile carousel ---------- */}
-      <div className="md:hidden relative w-full overflow-hidden bg-[#18294B]">
+      <div className="md:hidden relative w-full overflow-hidden bg-[#18294B] dark:bg-[#101b30]">
         <div
           className="flex transition-transform duration-700 ease-in-out"
           style={{ transform: `translateX(-${active * 100}%)` }}
@@ -112,7 +112,7 @@ const Carousel = () => {
       </div>
 
       {/* ---------- Desktop carousel ---------- */}
-      <div className="hidden md:block relative w-full overflow-hidden bg-[#18294B]">
+      <div className="hidden md:block relative w-full overflow-hidden bg-[#18294B] dark:bg-[#101b30]">
         <div className="max-w-[980px] mx-auto">
           <div className="relative h-[420px]">
             <div
@@ -122,7 +122,7 @@ const Carousel = () => {
               {slides.map((slide, i) => (
                 <div key={i} className="w-full shrink-0 h-full relative flex">
                   {/* Dark caption panel */}
-                  <div className="w-[42%] h-full bg-[#18294B] flex items-center px-8 lg:px-10 shrink-0">
+                  <div className="w-[42%] h-full bg-[#18294B] dark:bg-[#101b30] flex items-center px-8 lg:px-10 shrink-0">
                     <div>
                       <h2 className="text-white text-3xl lg:text-4xl font-bold leading-tight mb-4">
                         {slide.heading}
@@ -130,7 +130,7 @@ const Carousel = () => {
                       <p className="text-white/90 text-base leading-snug mb-6">
                         {slide.text}
                       </p>
-                      <button className="bg-[#0077be] hover:bg-[#005a8e] text-white font-semibold py-2.5 px-7 rounded transition">
+                      <button className="bg-[#0077be] dark:bg-[#3ba0ea] hover:bg-[#005a8e] dark:hover:bg-[#62b4f0] text-white dark:text-[#0f172a] font-semibold py-2.5 px-7 rounded transition">
                         Learn More
                       </button>
                     </div>
@@ -167,7 +167,7 @@ const Carousel = () => {
           </div>
         </div>
 
-        <div className="w-full bg-white py-3 flex justify-center gap-2.5">
+        <div className="w-full bg-white dark:bg-[#0f172a] py-3 flex justify-center gap-2.5">
           {slides.map((_, i) => (
             <button
               key={i}
@@ -175,8 +175,8 @@ const Carousel = () => {
               aria-label={`Go to slide ${i + 1}`}
               className={`h-2.5 w-2.5 rounded-full border-2 transition-all ${
                 active === i
-                  ? "bg-[#18294B] border-[#18294B]"
-                  : "bg-transparent border-gray-400"
+                  ? "bg-[#18294B] border-[#18294B] dark:bg-[#7fb8e6] dark:border-[#7fb8e6]"
+                  : "bg-transparent border-gray-400 dark:border-gray-500"
               }`}
             />
           ))}

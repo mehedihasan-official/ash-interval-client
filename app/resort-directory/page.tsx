@@ -1,11 +1,11 @@
 const ResortDirectoryPage = () => {
   return (
-    <div className="min-h-[70vh] px-6 py-12">
+    <div className="min-h-[70vh] px-6 py-12 bg-white dark:bg-[#0f172a]">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#18294B] mb-4">
+        <h1 className="text-3xl font-bold text-[#18294B] dark:text-white mb-4">
           Resort Directory
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           This page will display the resort directory and booking options.
         </p>
       </div>
