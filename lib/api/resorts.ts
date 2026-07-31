@@ -166,3 +166,39 @@ function normalizeResortSearchResult(
 export async function getResortById(id: string): Promise<Resort | null> {
   return apiFetch<Resort>(`/resorts/${encodeURIComponent(id)}`);
 }
+
+// The backend caps a single request's `limit` at 50, but browsing by
+// country/region needs the *entire* dataset (1,700+ resorts) available
+// client-side to group by country and derive regions accurately —
+// otherwise "browse by country" would only ever reflect whichever 50
+// resorts happened to load first. This walks every page automatically.
+const MAX_PAGE_SIZE = 50;
+
+// A hard ceiling on how many pages we'll walk, purely as a safety net
+// against an unexpected backend bug (e.g. `total` never converging)
+// turning into an infinite request loop. 1,700 resorts / 50 per page
+// is ~34 pages, so 200 pages (10,000 resorts) leaves generous headroom.
+const MAX_PAGES = 200;
+
+/**
+ * Fetch every resort in the dataset by walking all pages of
+ * GET /api/resorts. Used once, app-wide, by ResortDataProvider so the
+ * country -> region -> resort browsing flow can group/filter the full
+ * dataset client-side instead of only ever seeing one page at a time.
+ */
+export async function fetchAllResorts(): Promise<Resort[]> {
+  const allResorts: Resort[] = [];
+  let page = 1;
+
+  while (page <= MAX_PAGES) {
+    const result = await searchResorts({ page, limit: MAX_PAGE_SIZE });
+    allResorts.push(...result.resorts);
+
+    if (page >= result.pagination.totalPages || result.resorts.length === 0) {
+      break;
+    }
+    page += 1;
+  }
+
+  return allResorts;
+}
