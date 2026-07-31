@@ -1,0 +1,264 @@
+ "use client";
+
+// Resort search/directory experience: a search bar (name or location) plus
+// a paginated results grid. The current search term and page number are
+// kept in the URL's query string (via useSearchParams/useRouter) so a
+// search is shareable/bookmarkable and survives a page refresh.
+import ResortCard from "@/components/resorts/ResortCard";
+import { searchResorts } from "@/lib/api/resorts";
+import type { Resort, ResortPagination } from "@/lib/types/resort";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { FaSearch } from "react-icons/fa";
+import { IoIosArrowForward } from "react-icons/io";
+
+const RESULTS_PER_PAGE = 12;
+
+const ResortDirectoryContent = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // The query string is the source of truth for the active search/page;
+  // this local state just mirrors the search input while the user types,
+  // so the field doesn't jump around before they submit.
+  const urlSearchTerm = searchParams.get("search") ?? "";
+  const urlLocation = searchParams.get("location") ?? "";
+  const urlPage = Math.max(1, Number(searchParams.get("page")) || 1);
+
+  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+  const [resorts, setResorts] = useState<Resort[]>([]);
+  const [pagination, setPagination] = useState<ResortPagination | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Fetch resorts whenever the URL's search term or page changes.
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadResorts = async () => {
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        const result = await searchResorts({
+          search: urlSearchTerm || undefined,
+          location: urlLocation || undefined,
+          page: urlPage,
+          limit: RESULTS_PER_PAGE,
+        });
+        if (isCancelled) return;
+        setResorts(result.resorts);
+        setPagination(result.pagination);
+      } catch (error) {
+        if (isCancelled) return;
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load resorts. Please try again.";
+        setErrorMessage(message);
+        setResorts([]);
+        setPagination(null);
+      } finally {
+        if (!isCancelled) setIsLoading(false);
+      }
+    };
+
+    loadResorts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [urlSearchTerm, urlLocation, urlPage]);
+
+  // Pushes a new URL reflecting the given search term/page, which in turn
+  // triggers the fetch effect above.
+  const navigateTo = useCallback(
+    (nextSearch: string, nextPage: number) => {
+      const params = new URLSearchParams();
+      if (nextSearch) params.set("search", nextSearch);
+      if (nextPage > 1) params.set("page", String(nextPage));
+      const queryString = params.toString();
+      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+    },
+    [pathname, router],
+  );
+
+  const handleSearchSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    navigateTo(searchInput.trim(), 1); // A new search always resets to page 1
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    navigateTo("", 1);
+  };
+
+  const goToPage = (page: number) => navigateTo(urlSearchTerm, page);
+
+  const countries = Array.from(
+    new Set(
+      resorts
+        .map((resort) =>
+          typeof resort.country === "string" ? resort.country.trim() : "",
+        )
+        .filter(Boolean),
+    ),
+  ).sort((first, second) => first.localeCompare(second));
+
+  const handleCountryClick = (country: string) => {
+    const params = new URLSearchParams();
+    params.set("location", country);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <div className="min-h-[70vh] px-4 sm:px-6 py-10 bg-white dark:bg-[#0f172a]">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-3xl font-bold text-[#18294B] dark:text-white mb-2">
+          Resort Directory
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Search our resort collection by name or destination.
+        </p>
+
+        {countries.length > 0 && !urlSearchTerm && !urlLocation && (
+          <div className="mb-8">
+            <h2 className="text-lg font-bold text-[#18294B] dark:text-white mb-3">
+              Browse by country
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {countries.map((country) => (
+                <button
+                  key={country}
+                  type="button"
+                  onClick={() => handleCountryClick(country)}
+                  className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-lg p-4 flex items-center justify-between text-left hover:border-[#0077be] hover:shadow-sm transition"
+                >
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
+                    {country}
+                  </span>
+                  <IoIosArrowForward className="text-[#f5a623]" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Search form */}
+        <form onSubmit={handleSearchSubmit} className="flex gap-2 mb-8">
+          <div className="relative grow">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+            <input
+              key={urlSearchTerm}
+              type="text"
+              defaultValue={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by resort name or destination..."
+              aria-label="Search resorts"
+              className="input input-bordered w-full pl-10 bg-white dark:bg-[#16223d] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-white/20 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-[#0077be] dark:bg-[#3ba0ea] text-white dark:text-[#0f172a] font-bold px-6 py-2.5 rounded hover:bg-[#005a8e] dark:hover:bg-[#62b4f0] transition shrink-0"
+          >
+            Search
+          </button>
+          {urlSearchTerm && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-200 font-medium px-4 py-2.5 rounded hover:bg-gray-50 dark:hover:bg-white/5 transition shrink-0"
+            >
+              Clear
+            </button>
+          )}
+        </form>
+
+        {/* Active search summary */}
+        {urlSearchTerm && !isLoading && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            {pagination?.total ?? 0} result{pagination?.total === 1 ? "" : "s"}{" "}
+            for
+            <span className="font-semibold text-[#18294B] dark:text-white">
+              {" "}
+              &ldquo;{urlSearchTerm}&rdquo;
+            </span>
+          </p>
+        )}
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-80 rounded-lg bg-gray-100 dark:bg-white/5 animate-pulse"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {!isLoading && errorMessage && (
+          <div className="text-center py-16 border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 rounded-lg">
+            <p className="text-red-600 dark:text-red-400 font-semibold mb-1">
+              Couldn&apos;t load resorts
+            </p>
+            <p className="text-red-500 dark:text-red-400/80 text-sm">
+              {errorMessage}
+            </p>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!isLoading && !errorMessage && resorts.length === 0 && (
+          <div className="text-center py-16 border border-gray-200 dark:border-white/10 rounded-lg">
+            <p className="text-[#18294B] dark:text-white font-semibold mb-1">
+              No resorts found
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Try a different resort name or destination.
+            </p>
+          </div>
+        )}
+
+        {/* Results grid */}
+        {!isLoading && !errorMessage && resorts.length > 0 && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {resorts.map((resort) => (
+                <ResortCard key={resort._id} resort={resort} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <button
+                  onClick={() => goToPage(urlPage - 1)}
+                  disabled={urlPage <= 1}
+                  className="px-4 py-2 rounded border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => goToPage(urlPage + 1)}
+                  disabled={urlPage >= pagination.totalPages}
+                  className="px-4 py-2 rounded border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ResortDirectoryContent;

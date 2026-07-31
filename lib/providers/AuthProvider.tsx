@@ -2,6 +2,7 @@
 
 // Provides authentication state (current user, role) and auth actions
 // (login, Google login, create profile, sign out) to the whole app.
+import { syncUserWithBackend } from "@/lib/api/users";
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -87,6 +88,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data.password,
       );
       await updateProfile(result.user, { displayName: data.userID });
+      await syncUserWithBackend({
+        name: data.userID,
+        email: data.email,
+      });
       return { success: true };
     } catch (error) {
       const message =
@@ -108,11 +113,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      // Role assignment (admin vs regular user) will be wired up to the
-      // backend/database in a later stage — defaulting to "user" for now.
-      setRole(currentUser ? "user" : null);
-      setLoading(false);
+      const syncAndSetAuthState = async () => {
+        setUser(currentUser);
+        setRole(currentUser ? "user" : null);
+
+        if (currentUser?.email) {
+          try {
+            await syncUserWithBackend({
+              name: currentUser.displayName ?? "",
+              email: currentUser.email,
+            });
+          } catch (error) {
+            // Firebase auth should remain usable if the API is temporarily down.
+            console.error(
+              "Could not sync authenticated user with backend:",
+              error,
+            );
+          }
+        }
+
+        setLoading(false);
+      };
+
+      void syncAndSetAuthState();
     });
     return () => unsubscribe();
   }, []);
