@@ -145,47 +145,10 @@ const ResortDirectoryContent = () => {
         )}
 
         {/* Search form */}
-        <form onSubmit={handleSearchSubmit} className="flex gap-2 mb-8">
-          <div className="relative grow">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-            <input
-              key={urlSearchTerm}
-              type="text"
-              defaultValue={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by resort name or destination..."
-              aria-label="Search resorts"
-              className="input input-bordered w-full pl-10 bg-white dark:bg-[#16223d] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-white/20 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-[#0077be] dark:bg-[#3ba0ea] text-white dark:text-[#0f172a] font-bold px-6 py-2.5 rounded hover:bg-[#005a8e] dark:hover:bg-[#62b4f0] transition shrink-0"
-          >
-            Search
-          </button>
-          {urlSearchTerm && (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-200 font-medium px-4 py-2.5 rounded hover:bg-gray-50 dark:hover:bg-white/5 transition shrink-0"
-            >
-              Clear
-            </button>
-          )}
-        </form>
+        
 
         {/* Active search summary */}
-        {urlSearchTerm && !isLoading && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {pagination?.total ?? 0} result{pagination?.total === 1 ? "" : "s"}{" "}
-            for
-            <span className="font-semibold text-[#18294B] dark:text-white">
-              {" "}
-              &ldquo;{urlSearchTerm}&rdquo;
-            </span>
-          </p>
-        )}
+        
 
         {/* Loading state */}
         {isLoading && (
@@ -210,52 +173,8 @@ const ResortDirectoryContent = () => {
             </p>
           </div>
         )}
+       
 
-        {/* Empty state */}
-        {!isLoading && !errorMessage && resorts.length === 0 && (
-          <div className="text-center py-16 border border-gray-200 dark:border-white/10 rounded-lg">
-            <p className="text-[#18294B] dark:text-white font-semibold mb-1">
-              No resorts found
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Try a different resort name or destination.
-            </p>
-          </div>
-        )}
-
-        {/* Results grid */}
-        {!isLoading && !errorMessage && resorts.length > 0 && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resorts.map((resort) => (
-                <ResortCard key={resort._id} resort={resort} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-10">
-                <button
-                  onClick={() => goToPage(urlPage - 1)}
-                  disabled={urlPage <= 1}
-                  className="px-4 py-2 rounded border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                >
-                  Previous
-                </button>
-                <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
-                  Page {pagination.page} of {pagination.totalPages}
-                </span>
-                <button
-                  onClick={() => goToPage(urlPage + 1)}
-                  disabled={urlPage >= pagination.totalPages}
-                  className="px-4 py-2 rounded border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
       </div>
     </div>
   );
