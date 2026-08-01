@@ -9,6 +9,7 @@
 
 export interface Resort {
   _id: string;
+  place_name: string;
   resortName?: string;
   country?: string;
   region?: string | string[];
@@ -60,7 +61,7 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export const getResortName = (resort: Resort): string =>
-  resort.resortName || "Unnamed resort";
+  resort.resortName || resort.place_name || "Unnamed resort";
 
 export const getResortImages = (resort: Resort): string[] => {
   const apiImages = [resort.img, resort.img2, resort.img3, resort.img4];
