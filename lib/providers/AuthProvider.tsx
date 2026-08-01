@@ -115,14 +115,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       const syncAndSetAuthState = async () => {
         setUser(currentUser);
-        setRole(currentUser ? "user" : null);
 
         if (currentUser?.email) {
+          // Default to "user" immediately so role is never left stuck on
+          // the previous session's value while the backend sync below is
+          // still in flight; it's upgraded to "admin" if the synced record
+          // says so.
+          setRole("user");
           try {
-            await syncUserWithBackend({
+            const backendUser = await syncUserWithBackend({
               name: currentUser.displayName ?? "",
               email: currentUser.email,
             });
+            setRole(backendUser.isAdmin ? "admin" : "user");
           } catch (error) {
             // Firebase auth should remain usable if the API is temporarily down.
             console.error(
@@ -130,6 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               error,
             );
           }
+        } else {
+          setRole(null);
         }
 
         setLoading(false);

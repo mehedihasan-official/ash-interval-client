@@ -105,7 +105,7 @@ const ResortDetailContent = ({ resort }: ResortDetailContentProps) => {
         </div>
 
         {/* Points / Cash booking options */}
-        <ExchangeGetaways />
+        <ExchangeGetaways resort={resort} />
 
         {/* Description / amenities / map tabs */}
         <ResortInfoTabs resort={resort} />

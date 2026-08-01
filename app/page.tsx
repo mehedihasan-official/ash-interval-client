@@ -1,7 +1,7 @@
 "use client";
 
 // Homepage: shows the carousel + info content for logged-out visitors.
-// Logged-in users are redirected to the resort directory (their main hub).
+// Logged-in users are redirected straight to their dashboard.
 import { useAuth } from "@/lib/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -13,7 +13,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/resort-directory");
+      router.push("/dashboard");
     }
   }, [user, loading, router]);
 

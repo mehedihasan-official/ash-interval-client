@@ -16,6 +16,7 @@ import ThemeToggle from "./ThemeToggle";
 
 // Nav items shown once a regular (non-admin) user is logged in.
 const userMenuItems = [
+  { name: "Dashboard", path: "/dashboard" },
   { name: "Resort Directory", path: "/resort-directory" },
   { name: "My Account", path: "/my-account" },
   { name: "My Bookings", path: "/my-bookings" },
@@ -114,7 +115,7 @@ const Header = () => {
         {/* Logo + logout — desktop, logged in */}
         {user && (
           <div className="hidden md:flex items-center justify-between px-4 py-4 max-w-[980px] mx-auto">
-            <Link href="/">
+            <Link href="/dashboard">
               <span className="text-2xl font-bold text-[#18294B] dark:text-white">Interval</span>
             </Link>
             <div className="flex items-center gap-3">
@@ -158,7 +159,7 @@ const Header = () => {
 
         {/* Mobile header bar */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18294B] dark:bg-[#101b30]">
-          <Link href="/" className="flex items-baseline gap-1.5">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-baseline gap-1.5">
             <span className="text-white text-lg font-bold lowercase tracking-tight">
               interval
             </span>

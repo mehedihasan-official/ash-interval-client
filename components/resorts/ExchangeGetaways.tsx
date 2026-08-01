@@ -2,15 +2,21 @@
 
 // Lets a visitor choose how they'd pay for a stay — Exchange (points)
 // or Getaways (cash) — and shows the matching per-unit pricing tiers,
-// mirroring Interval's real points/cash booking options. Search/
-// availability/checkout are a later stage, so the buttons here confirm
-// the visitor's intent (sign in, then continue) rather than opening an
-// incomplete booking flow.
+// mirroring Interval's real points/cash booking options. Once dates and
+// guests are set, "Search Available Units" hands off to the available-unit
+// page, which is where an actual unit gets picked.
 import { useAuth } from "@/lib/providers/AuthProvider";
+import type { Resort } from "@/lib/types/resort";
+import type { BookingSearch } from "@/lib/types/booking";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
 type VacationType = "exchange" | "getaways";
+
+interface ExchangeGetawaysProps {
+  resort: Resort;
+}
 
 const POINTS_TIERS = [
   { unit: "Studio", price: "2,000" },
@@ -28,8 +34,9 @@ const CASH_TIERS = [
   { unit: "4+ Bedroom", price: "$100/night" },
 ];
 
-const ExchangeGetaways = () => {
+const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
   const { user } = useAuth();
+  const router = useRouter();
   const [vacationType, setVacationType] = useState<VacationType>("exchange");
   const [earliestDate, setEarliestDate] = useState("");
   const [latestDate, setLatestDate] = useState("");
@@ -39,18 +46,28 @@ const ExchangeGetaways = () => {
   const today = new Date().toISOString().split("T")[0];
   const isExchange = vacationType === "exchange";
 
-  // Searching for available units, and the booking flow it leads to, is
-  // a later stage. Confirm the visitor's search intent here (and their
-  // travel dates are validated) rather than taking them somewhere
-  // incomplete — signed-in visitors see what's coming next; signed-out
-  // visitors are prompted to sign in first, matching the rest of the
-  // site's search -> details -> login -> [future] booking journey.
+  // Validates the search, then hands off to the available-unit page for
+  // this resort. Travel dates + guests are passed as a query string (the
+  // available-unit page reads them back out) rather than through app
+  // state, since this is a normal, bookmarkable/shareable search — signed
+  // out visitors are prompted to sign in first, matching the rest of the
+  // site's search -> details -> login -> booking journey.
   const handleSearch = () => {
     if (!earliestDate || !latestDate) {
       Swal.fire({
         icon: "warning",
         title: "Select your travel dates",
         text: "Please choose both an earliest and latest travel date.",
+        confirmButtonColor: "#0077be",
+      });
+      return;
+    }
+
+    if (new Date(latestDate) < new Date(earliestDate)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Check your travel dates",
+        text: "Your latest travel date should be on or after the earliest one.",
         confirmButtonColor: "#0077be",
       });
       return;
@@ -63,15 +80,27 @@ const ExchangeGetaways = () => {
         text: "Create a free account or sign in to see available units.",
         confirmButtonColor: "#0077be",
       });
+      router.push("/login");
       return;
     }
 
-    Swal.fire({
-      icon: "info",
-      title: "Availability search coming soon",
-      text: `Searching for available units (${isExchange ? "points" : "cash"}) will be available in an upcoming update.`,
-      confirmButtonColor: "#0077be",
+    const search: BookingSearch = {
+      earliestDate,
+      latestDate,
+      adults,
+      children,
+      vacationType,
+    };
+
+    const query = new URLSearchParams({
+      earliestDate: search.earliestDate,
+      latestDate: search.latestDate,
+      adults: String(search.adults),
+      children: String(search.children),
+      vacationType: search.vacationType,
     });
+
+    router.push(`/resort-directory/${resort._id}/available-unit?${query.toString()}`);
   };
 
   return (
