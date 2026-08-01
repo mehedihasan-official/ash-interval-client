@@ -9,7 +9,6 @@
 
 export interface Resort {
   _id: string;
-  name?: string;
   resortName?: string;
   country?: string;
   region?: string | string[];
@@ -61,12 +60,21 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export const getResortName = (resort: Resort): string =>
-  resort.resortName || resort.name || "Unnamed resort";
+  resort.resortName || "Unnamed resort";
 
 export const getResortImages = (resort: Resort): string[] => {
-  const legacyImages = [resort.img, resort.img2, resort.img3, resort.img4];
-  const images = Array.isArray(resort.images) ? resort.images : legacyImages;
-  return images.filter((image): image is string => Boolean(image));
+  const apiImages = [resort.img, resort.img2, resort.img3, resort.img4];
+  const additionalImages = Array.isArray(resort.images) ? resort.images : [];
+  const images = [...apiImages, ...additionalImages];
+
+  return Array.from(
+    new Set(
+      images.filter(
+        (image): image is string =>
+          typeof image === "string" && image.trim().length > 0,
+      ),
+    ),
+  );
 };
 
 // `region` is typed as `string | string[]` because the bulk-imported

@@ -4,12 +4,11 @@
 // a paginated results grid. The current search term and page number are
 // kept in the URL's query string (via useSearchParams/useRouter) so a
 // search is shareable/bookmarkable and survives a page refresh.
-import ResortCard from "@/components/resorts/ResortCard";
+
 import { searchResorts } from "@/lib/api/resorts";
 import type { Resort, ResortPagination } from "@/lib/types/resort";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { FaSearch } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 
 const RESULTS_PER_PAGE = 12;
@@ -26,9 +25,9 @@ const ResortDirectoryContent = () => {
   const urlLocation = searchParams.get("location") ?? "";
   const urlPage = Math.max(1, Number(searchParams.get("page")) || 1);
 
-  const [searchInput, setSearchInput] = useState(urlSearchTerm);
+
   const [resorts, setResorts] = useState<Resort[]>([]);
-  const [pagination, setPagination] = useState<ResortPagination | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -70,31 +69,7 @@ const ResortDirectoryContent = () => {
     };
   }, [urlSearchTerm, urlLocation, urlPage]);
 
-  // Pushes a new URL reflecting the given search term/page, which in turn
-  // triggers the fetch effect above.
-  const navigateTo = useCallback(
-    (nextSearch: string, nextPage: number) => {
-      const params = new URLSearchParams();
-      if (nextSearch) params.set("search", nextSearch);
-      if (nextPage > 1) params.set("page", String(nextPage));
-      const queryString = params.toString();
-      router.push(queryString ? `${pathname}?${queryString}` : pathname);
-    },
-    [pathname, router],
-  );
-
-  const handleSearchSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    navigateTo(searchInput.trim(), 1); // A new search always resets to page 1
-  };
-
-  const handleClearSearch = () => {
-    setSearchInput("");
-    navigateTo("", 1);
-  };
-
-  const goToPage = (page: number) => navigateTo(urlSearchTerm, page);
-
+ 
   const countries = Array.from(
     new Set(
       resorts

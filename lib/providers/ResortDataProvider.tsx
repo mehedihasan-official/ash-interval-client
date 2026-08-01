@@ -64,6 +64,8 @@ export const ResortDataProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [reloadCount]);
 
+
+  console.log(resorts)
   return (
     <ResortDataContext.Provider value={{ resorts, loading, error, reload }}>
       {children}
