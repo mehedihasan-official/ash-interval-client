@@ -67,7 +67,7 @@ const ResortImage = ({
       // key forces Next's <Image> to remount when we switch candidates —
       // without this it can keep showing the previously-successful (or
       // previously-failed) image instead of actually retrying the new src.
-      key={imageSource}
+      key={`${sourceKey}:${candidateIndex}`}
       src={imageSource}
       alt={alt}
       fill={fill}

@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 // Resort search/directory experience: a search bar (name or location) plus
 // a paginated results grid. The current search term and page number are
@@ -6,9 +6,9 @@
 // search is shareable/bookmarkable and survives a page refresh.
 
 import { searchResorts } from "@/lib/api/resorts";
-import type { Resort, ResortPagination } from "@/lib/types/resort";
+import type { Resort } from "@/lib/types/resort";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { IoIosArrowForward } from "react-icons/io";
 
 const RESULTS_PER_PAGE = 12;
@@ -24,7 +24,6 @@ const ResortDirectoryContent = () => {
   const urlSearchTerm = searchParams.get("search") ?? "";
   const urlLocation = searchParams.get("location") ?? "";
   const urlPage = Math.max(1, Number(searchParams.get("page")) || 1);
-
 
   const [resorts, setResorts] = useState<Resort[]>([]);
 
@@ -47,7 +46,6 @@ const ResortDirectoryContent = () => {
         });
         if (isCancelled) return;
         setResorts(result.resorts);
-        setPagination(result.pagination);
       } catch (error) {
         if (isCancelled) return;
         const message =
@@ -56,7 +54,6 @@ const ResortDirectoryContent = () => {
             : "Failed to load resorts. Please try again.";
         setErrorMessage(message);
         setResorts([]);
-        setPagination(null);
       } finally {
         if (!isCancelled) setIsLoading(false);
       }
@@ -69,7 +66,6 @@ const ResortDirectoryContent = () => {
     };
   }, [urlSearchTerm, urlLocation, urlPage]);
 
- 
   const countries = Array.from(
     new Set(
       resorts
@@ -120,7 +116,6 @@ const ResortDirectoryContent = () => {
         )}
 
         {/* Search form */}
-        
 
         {/* Loading state */}
         {isLoading && (
@@ -145,8 +140,6 @@ const ResortDirectoryContent = () => {
             </p>
           </div>
         )}
-       
-
       </div>
     </div>
   );
