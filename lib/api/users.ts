@@ -10,6 +10,12 @@ interface BackendUser {
   name: string;
   email: string;
   isAdmin: boolean;
+  // Interval points balance and cash wallet balance. Both start from the
+  // signup bonus the backend grants the first time an account is created
+  // (see SERVER_NOTES.md) and change afterwards through bookings paid with
+  // points and points-to-cash conversions.
+  points: number;
+  cashBalance: number;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -10,6 +10,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -43,7 +44,13 @@ const getInitialTheme = (): Theme => {
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  useEffect(() => {
+    const initialTheme = getInitialTheme();
+    setThemeState(initialTheme);
+    applyThemeClass(initialTheme);
+  }, []);
 
   const setTheme = (next: Theme) => {
     setThemeState(next);

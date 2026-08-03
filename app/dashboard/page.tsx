@@ -8,6 +8,7 @@ import Loading from "@/components/resorts/Loading";
 import ResortCard from "@/components/resorts/ResortCard";
 import { fetchBookingsByEmail, type Booking } from "@/lib/api/bookings";
 import { searchResorts } from "@/lib/api/resorts";
+import { fetchWallet, type WalletSummary } from "@/lib/api/wallet";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import { getResortName, type Resort } from "@/lib/types/resort";
 import Link from "next/link";
@@ -15,11 +16,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   FaCalendarAlt,
+  FaCoins,
   FaCompass,
+  FaExchangeAlt,
   FaMapMarkerAlt,
   FaSuitcaseRolling,
   FaUserCircle,
+  FaWallet,
 } from "react-icons/fa";
+
+const formatUsd = (value: number) =>
+  value.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
 const isUpcoming = (booking: Booking) => new Date(booking.startDate).getTime() >= Date.now();
 
@@ -29,6 +36,7 @@ const DashboardPage = () => {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [featuredResorts, setFeaturedResorts] = useState<Resort[]>([]);
+  const [wallet, setWallet] = useState<WalletSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -48,13 +56,15 @@ const DashboardPage = () => {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const [bookingsResult, resortsResult] = await Promise.all([
+        const [bookingsResult, resortsResult, walletResult] = await Promise.all([
           fetchBookingsByEmail(user.email as string),
           searchResorts({ limit: 3 }),
+          fetchWallet(user.email as string),
         ]);
         if (isCancelled) return;
         setBookings(bookingsResult);
         setFeaturedResorts(resortsResult.resorts);
+        setWallet(walletResult);
       } catch (error) {
         if (isCancelled) return;
         setErrorMessage(
@@ -98,8 +108,38 @@ const DashboardPage = () => {
           </div>
         )}
 
+        {/* Wallet snapshot */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center justify-between shadow-sm">
+            <div>
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wide">
+                <FaCoins className="text-[#0077be] dark:text-[#7fb8e6]" /> Points Balance
+              </div>
+              <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-white">
+                {isLoading ? "..." : (wallet?.points ?? 0).toLocaleString()}
+              </p>
+            </div>
+            <Link
+              href="/dashboard/points"
+              className="shrink-0 bg-[#0077be] hover:bg-[#005a8e] text-white text-xs font-bold px-4 py-2 rounded-lg transition flex items-center gap-1.5"
+            >
+              <FaExchangeAlt className="w-3 h-3" /> Convert to Cash
+            </Link>
+          </div>
+          <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center justify-between shadow-sm">
+            <div>
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wide">
+                <FaWallet className="text-[#0077be] dark:text-[#7fb8e6]" /> Cash Wallet
+              </div>
+              <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-white">
+                {isLoading ? "..." : formatUsd(wallet?.cashBalance ?? 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Quick actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-8">
           <Link
             href="/resort-directory"
             className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
@@ -134,6 +174,15 @@ const DashboardPage = () => {
             <FaUserCircle className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
             <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
               Membership
+            </span>
+          </Link>
+          <Link
+            href="/dashboard/points"
+            className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
+          >
+            <FaCoins className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+              Convert Points
             </span>
           </Link>
           <Link

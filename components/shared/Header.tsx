@@ -67,7 +67,7 @@ const Header = () => {
       {/* Top language bar — desktop only, hidden once logged in */}
       {!user && (
         <div className="hidden md:flex justify-end items-center bg-[#f2f2f2] dark:bg-[#16223d] px-4 py-1.5 border-b border-gray-300 dark:border-white/10">
-          <div className="max-w-[980px] mx-auto w-full flex justify-end items-center">
+          <div className="max-w-245 mx-auto w-full flex justify-end items-center">
             <span className="text-gray-700 dark:text-gray-300 text-xs mr-2 font-medium">
               Language:
             </span>
@@ -82,10 +82,10 @@ const Header = () => {
         {/* Logo + auth buttons row — desktop, logged out */}
         {!user && (
           <div className="hidden md:block w-full bg-white dark:bg-[#0f172a]">
-            <div className="max-w-[980px] mx-auto flex items-center justify-between py-4">
+            <div className="max-w-245 mx-auto flex items-center justify-between py-4">
               <Link
                 href="/"
-                className="relative h-[75px] w-[500px] shrink-0 dark:bg-white dark:rounded-md dark:px-2"
+                className="relative h-18.75 w-125 shrink-0 dark:bg-white dark:rounded-md dark:px-2"
               >
                 <Image
                   src={headerBanner}
@@ -117,7 +117,7 @@ const Header = () => {
 
         {/* Logo + logout — desktop, logged in */}
         {user && (
-          <div className="hidden md:flex items-center justify-between px-4 py-4 max-w-[980px] mx-auto">
+          <div className="hidden md:flex items-center justify-between px-4 py-4 max-w-245 mx-auto">
             <Link href="/dashboard">
               <span className="text-2xl font-bold text-[#18294B] dark:text-white">Interval</span>
             </Link>
@@ -135,7 +135,7 @@ const Header = () => {
 
         {/* Desktop nav tabs */}
         <nav className="hidden md:flex bg-[#18294B] dark:bg-[#101b30]">
-          <div className="max-w-[980px] mx-auto w-full flex">
+          <div className="max-w-245 mx-auto w-full flex">
             {user
               ? userMenuItems.map((item) => (
                   <Link
@@ -186,14 +186,14 @@ const Header = () => {
       {/* Mobile menu overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[60] md:hidden"
+          className="fixed inset-0 bg-black/50 z-60 md:hidden"
           onClick={closeMenu}
         />
       )}
 
       {/* Mobile slide-out sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white dark:bg-[#16223d] shadow-2xl z-[70] transform transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white dark:bg-[#16223d] shadow-2xl z-70 transform transition-transform duration-300 md:hidden ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -217,7 +217,7 @@ const Header = () => {
               }`}
             >
               <span>{item.name}</span>
-              <IoIosArrowForward className="text-[#1a6fa8] dark:text-[#7fb8e6] flex-shrink-0" />
+              <IoIosArrowForward className="text-[#1a6fa8] dark:text-[#7fb8e6] shrink-0" />
             </Link>
           ))}
 

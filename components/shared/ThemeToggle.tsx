@@ -49,8 +49,12 @@ const ThemeToggle = ({ variant = "desktop" }: ThemeToggleProps) => {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition shrink-0"
-      aria-label="Toggle dark mode"
+      className={`p-2 rounded-full border transition shrink-0 ${
+        isDark
+          ? "border-white/15 bg-slate-800/70 text-slate-100 hover:bg-slate-700/80"
+          : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100 shadow-sm"
+      }`}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
       {isDark ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
