@@ -277,25 +277,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Explore more resorts */}
-        <div>
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-[#0077be] rounded-full" />
-            Explore Resorts
-          </h2>
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
-              {[0, 1, 2].map((key) => (
-                <div key={key} className="h-64 bg-gray-100 dark:bg-white/5 rounded-lg" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {featuredResorts.map((resort) => (
-                <ResortCard key={resort._id} resort={resort} />
-              ))}
-            </div>
-          )}
-        </div>
+        
       </div>
     </div>
   );
