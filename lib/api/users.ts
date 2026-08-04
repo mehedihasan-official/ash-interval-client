@@ -55,6 +55,53 @@ export async function syncUserWithBackend(
   }
 }
 
+async function fetchBackendUserByEmail(
+  email: string,
+): Promise<BackendUser | null> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getApiBaseUrl()}/users?email=${encodeURIComponent(email)}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  } catch {
+    throw new Error(
+      "Could not reach the server while looking up your profile.",
+    );
+  }
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  let body: ApiResponse<BackendUser> | BackendUser | null = null;
+  try {
+    body = await response.json();
+  } catch {
+    // The status check below reports a useful error for non-JSON responses.
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      body && typeof body === "object" && "message" in body
+        ? String(body.message)
+        : `Request failed with status ${response.status}`,
+    );
+  }
+
+  if (body && typeof body === "object" && "success" in body) {
+    if (!body.success) {
+      throw new Error(body.message);
+    }
+    return body.data;
+  }
+
+  return body as BackendUser;
+}
+
 async function syncUser(
   user: UserSyncInput,
   email: string,
@@ -81,9 +128,33 @@ async function syncUser(
   }
 
   if (!response.ok || !body?.success) {
-    throw new Error(
-      body?.message || "Could not sync your profile with the server.",
-    );
+    const errorMessage =
+      body?.message || "Could not sync your profile with the server.";
+
+    if (
+      response.status === 409 ||
+      (typeof errorMessage === "string" &&
+        errorMessage.toLowerCase().includes("already exists"))
+    ) {
+      try {
+        const existingUser = await fetchBackendUserByEmail(email);
+        if (existingUser) {
+          return existingUser;
+        }
+      } catch {
+        // If lookup failed, fall back to a safe default instead of blocking
+        // user sign-in due to a backend duplicate record.
+      }
+
+      return {
+        _id: email,
+        name: user.name.trim() || email.split("@")[0],
+        email,
+        isAdmin: false,
+      };
+    }
+
+    throw new Error(errorMessage);
   }
 
   return body.data;
