@@ -155,7 +155,7 @@ const DashboardPage = () => {
           >
             <FaSuitcaseRolling className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
             <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-              Gateways
+              Getaways
             </span>
           </Link>
           <Link

@@ -17,7 +17,7 @@ import ThemeToggle from "./ThemeToggle";
 // Nav items shown once a regular (non-admin) user is logged in.
 const userMenuItems = [
   { name: "Dashboard", path: "/dashboard" },
-  { name: "Gateways", path: "/dashboard/gateways" },
+  { name: "Getaways", path: "/dashboard/gateways" },
   { name: "Exchange", path: "/dashboard/exchange" },
   { name: "Membership", path: "/dashboard/membership" },
   { name: "Resort Directory", path: "/resort-directory" },
