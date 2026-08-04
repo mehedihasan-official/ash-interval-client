@@ -68,8 +68,8 @@ export const SIGNUP_BONUS_POINTS = 1000;
 
 // USD value of a single point when converting to cash, before commission.
 // Mirrors POINTS_PER_NIGHT / CASH_PRICE_PER_NIGHT in lib/types/booking.ts —
-// a Studio night costs 2000 points or $50, so 1 point ≈ $0.025.
-export const POINTS_TO_USD_RATE = 0.025;
+// a Studio night costs 2000 points or $50, so 1 point ≈ $0.05.
+export const POINTS_TO_USD_RATE = 0.05;
 
 export interface WalletSummary {
   points: number;
