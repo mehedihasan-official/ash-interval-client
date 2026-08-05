@@ -18,18 +18,30 @@ import {
   FaUtensils,
 } from "react-icons/fa";
 
-const isUpcoming = (booking: Booking) => new Date(booking.startDate).getTime() >= Date.now();
+const getBookingStartDate = (booking: Booking) =>
+  new Date(booking.startDate ?? booking.checkInDate ?? 0);
+
+const getBookingEndDate = (booking: Booking) =>
+  new Date(booking.endDate ?? booking.checkOutDate ?? 0);
+
+const isUpcoming = (booking: Booking) =>
+  getBookingStartDate(booking).getTime() >= Date.now();
 
 const BookingCard = ({ booking }: { booking: Booking }) => {
-  const resortName = getResortName(booking.resort);
+  const resort = booking.resort ?? ({ place_name: "Unknown resort" } as any);
+  const resortName = getResortName(resort);
   const isPoints = booking.paymentMethod === "points";
-  const nights = booking.nights;
+  const nights = booking.nights ?? 1;
+  const startDate = getBookingStartDate(booking);
+  const endDate = getBookingEndDate(booking);
+  const formatDate = (date: Date) =>
+    Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleDateString();
 
   return (
     <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
       <div className="flex flex-col sm:flex-row">
         <div className="relative w-full sm:w-40 h-36 shrink-0">
-          <ResortImage src={booking.resort.img} alt={resortName} sizes="160px" />
+          <ResortImage src={resort.img} alt={resortName} sizes="160px" />
         </div>
         <div className="p-4 grow">
           <div className="flex items-start justify-between gap-3 mb-2">
@@ -37,10 +49,10 @@ const BookingCard = ({ booking }: { booking: Booking }) => {
               <h3 className="font-bold text-gray-800 dark:text-white leading-snug">
                 {resortName}
               </h3>
-              {booking.resort.location && (
+              {resort.location && (
                 <p className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-xs mt-1">
                   <FaMapMarkerAlt className="shrink-0" />
-                  <span className="line-clamp-1">{booking.resort.location}</span>
+                  <span className="line-clamp-1">{resort.location}</span>
                 </p>
               )}
             </div>
@@ -51,7 +63,11 @@ const BookingCard = ({ booking }: { booking: Booking }) => {
                   : "bg-blue-50 dark:bg-white/10 text-[#0077be] dark:text-[#7fb8e6]"
               }`}
             >
-              {isPoints ? <FaMedal className="w-3 h-3" /> : <FaUtensils className="w-3 h-3" />}
+              {isPoints ? (
+                <FaMedal className="w-3 h-3" />
+              ) : (
+                <FaUtensils className="w-3 h-3" />
+              )}
               {isPoints ? "Points" : "Getaway"}
             </span>
           </div>
@@ -59,18 +75,21 @@ const BookingCard = ({ booking }: { booking: Booking }) => {
           <div className="grid grid-cols-2 gap-y-1 text-xs text-gray-600 dark:text-gray-300 mt-2">
             <p className="flex items-center gap-1.5">
               <FaCalendarAlt className="text-gray-400 dark:text-gray-500 shrink-0" />
-              {new Date(booking.startDate).toLocaleDateString()} &rarr;{" "}
-              {new Date(booking.endDate).toLocaleDateString()}
+              {formatDate(startDate)} &rarr; {formatDate(endDate)}
             </p>
             <p>
-              <span className="font-semibold">{nights}</span> night{nights === 1 ? "" : "s"}
+              <span className="font-semibold">{nights}</span> night
+              {nights === 1 ? "" : "s"}
             </p>
             <p>
-              <span className="font-semibold">Unit:</span> {booking.unitType}
+              <span className="font-semibold">Unit:</span>{" "}
+              {booking.unitType ?? "Unknown"}
             </p>
             <p>
               <span className="font-semibold">Total:</span>{" "}
-              {isPoints ? `${booking.points.toLocaleString()} pts` : `$${booking.price.toFixed(2)}`}
+              {isPoints
+                ? `${(booking.points ?? 0).toLocaleString()} pts`
+                : `$${(booking.price ?? 0).toFixed(2)}`}
             </p>
           </div>
         </div>
@@ -106,7 +125,9 @@ const MyBookingsPage = () => {
       } catch (error) {
         if (!isCancelled) {
           setErrorMessage(
-            error instanceof Error ? error.message : "Could not load your bookings.",
+            error instanceof Error
+              ? error.message
+              : "Could not load your bookings.",
           );
         }
       } finally {
@@ -143,7 +164,10 @@ const MyBookingsPage = () => {
         {isLoading ? (
           <div className="space-y-4 animate-pulse">
             {[0, 1, 2].map((key) => (
-              <div key={key} className="h-36 bg-gray-100 dark:bg-white/5 rounded-xl" />
+              <div
+                key={key}
+                className="h-36 bg-gray-100 dark:bg-white/5 rounded-xl"
+              />
             ))}
           </div>
         ) : bookings.length === 0 ? (

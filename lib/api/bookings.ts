@@ -2,8 +2,8 @@
 // Mirrors the shape and error-handling conventions of lib/api/resorts.ts so
 // booking calls behave the same way (unwrap the { success, message, data }
 // envelope, throw a plain Error with the backend's message on failure).
-import type { ApiResponse, Resort } from "@/lib/types/resort";
 import type { BillingInfo } from "@/lib/types/booking";
+import type { ApiResponse, Resort } from "@/lib/types/resort";
 
 function getApiBaseUrl(): string {
   return (
@@ -11,7 +11,10 @@ function getApiBaseUrl(): string {
   ).replace(/\/$/, "");
 }
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T | null> {
+async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T | null> {
   const url = `${getApiBaseUrl()}${path}`;
 
   let response: Response;
@@ -85,17 +88,23 @@ export interface Booking extends CreateBookingInput {
   _id: string;
   createdAt?: string;
   updatedAt?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
 }
 
 /** Records a confirmed booking. Called once payment/points redemption is submitted. */
-export async function createBooking(input: CreateBookingInput): Promise<Booking> {
+export async function createBooking(
+  input: CreateBookingInput,
+): Promise<Booking> {
   const result = await apiFetch<Booking>("/bookings", {
     method: "POST",
     body: JSON.stringify(input),
   });
 
   if (!result) {
-    throw new Error("Unexpected response from the server while saving your booking.");
+    throw new Error(
+      "Unexpected response from the server while saving your booking.",
+    );
   }
 
   return result;
@@ -104,7 +113,9 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
 // The backend can respond to GET /bookings?email= with either a bare array
 // or an object wrapping one, depending on how many records match — this
 // normalizes either shape to a plain array so callers don't need to care.
-function normalizeBookingList(result: Booking[] | { bookings?: Booking[] } | null): Booking[] {
+function normalizeBookingList(
+  result: Booking[] | { bookings?: Booking[] } | null,
+): Booking[] {
   if (!result) return [];
   if (Array.isArray(result)) return result;
   return Array.isArray(result.bookings) ? result.bookings : [];
@@ -119,6 +130,7 @@ export async function fetchBookingsByEmail(email: string): Promise<Booking[]> {
   const bookings = normalizeBookingList(result);
   return bookings.sort(
     (a, b) =>
-      new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+      new Date(b.createdAt ?? 0).getTime() -
+      new Date(a.createdAt ?? 0).getTime(),
   );
 }

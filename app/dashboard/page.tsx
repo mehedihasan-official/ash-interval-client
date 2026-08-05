@@ -5,9 +5,7 @@
 // site (browse resorts, view all bookings, manage account) rather than
 // dropping them straight into the resort directory with no context.
 import Loading from "@/components/resorts/Loading";
-import ResortCard from "@/components/resorts/ResortCard";
 import { fetchBookingsByEmail, type Booking } from "@/lib/api/bookings";
-import { searchResorts } from "@/lib/api/resorts";
 import { fetchWallet, type WalletSummary } from "@/lib/api/wallet";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import { getResortName, type Resort } from "@/lib/types/resort";
@@ -29,14 +27,23 @@ import {
 const formatUsd = (value: number) =>
   value.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
-const isUpcoming = (booking: Booking) => new Date(booking.startDate).getTime() >= Date.now();
+const getBookingStartDate = (booking: Booking) =>
+  new Date(booking.startDate ?? booking.checkInDate ?? 0);
+
+const getBookingEndDate = (booking: Booking) =>
+  new Date(booking.endDate ?? booking.checkOutDate ?? 0);
+
+const formatDate = (date: Date) =>
+  Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleDateString();
+
+const isUpcoming = (booking: Booking) =>
+  getBookingStartDate(booking).getTime() >= Date.now();
 
 const DashboardPage = () => {
   const { user, role, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [featuredResorts, setFeaturedResorts] = useState<Resort[]>([]);
   const [wallet, setWallet] = useState<WalletSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,19 +64,19 @@ const DashboardPage = () => {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const [bookingsResult, resortsResult, walletResult] = await Promise.all([
+        const [bookingsResult, walletResult] = await Promise.all([
           fetchBookingsByEmail(user.email as string),
-          searchResorts({ limit: 3 }),
           fetchWallet(user.email as string),
         ]);
         if (isCancelled) return;
         setBookings(bookingsResult);
-        setFeaturedResorts(resortsResult.resorts);
         setWallet(walletResult);
       } catch (error) {
         if (isCancelled) return;
         setErrorMessage(
-          error instanceof Error ? error.message : "Could not load your dashboard right now.",
+          error instanceof Error
+            ? error.message
+            : "Could not load your dashboard right now.",
         );
       } finally {
         if (!isCancelled) setIsLoading(false);
@@ -114,7 +121,8 @@ const DashboardPage = () => {
           <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center justify-between shadow-sm">
             <div>
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wide">
-                <FaCoins className="text-[#0077be] dark:text-[#7fb8e6]" /> Points Balance
+                <FaCoins className="text-[#0077be] dark:text-[#7fb8e6]" />{" "}
+                Points Balance
               </div>
               <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-white">
                 {isLoading ? "..." : (wallet?.points ?? 0).toLocaleString()}
@@ -130,7 +138,8 @@ const DashboardPage = () => {
           <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center justify-between shadow-sm">
             <div>
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wide">
-                <FaWallet className="text-[#0077be] dark:text-[#7fb8e6]" /> Cash Wallet
+                <FaWallet className="text-[#0077be] dark:text-[#7fb8e6]" /> Cash
+                Wallet
               </div>
               <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-white">
                 {isLoading ? "..." : formatUsd(wallet?.cashBalance ?? 0)}
@@ -151,7 +160,9 @@ const DashboardPage = () => {
               className="bg-[#18294B] dark:bg-[#101b30] border border-[#18294B] dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition"
             >
               <FaUserShield className="text-white w-5 h-5" />
-              <span className="text-xs font-semibold text-white">Admin Panel</span>
+              <span className="text-xs font-semibold text-white">
+                Admin Panel
+              </span>
             </Link>
           )}
           <Link
@@ -245,7 +256,10 @@ const DashboardPage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
               {[0, 1, 2].map((key) => (
-                <div key={key} className="h-32 bg-gray-100 dark:bg-white/5 rounded-xl" />
+                <div
+                  key={key}
+                  className="h-32 bg-gray-100 dark:bg-white/5 rounded-xl"
+                />
               ))}
             </div>
           ) : upcomingBookings.length === 0 ? (
@@ -268,18 +282,29 @@ const DashboardPage = () => {
                   key={booking._id}
                   className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 shadow-sm"
                 >
-                  <p className="font-bold text-gray-800 dark:text-white text-sm leading-snug line-clamp-1">
-                    {getResortName(booking.resort)}
-                  </p>
-                  {booking.resort.location && (
-                    <p className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-xs mt-1">
-                      <FaMapMarkerAlt className="shrink-0" />
-                      <span className="line-clamp-1">{booking.resort.location}</span>
-                    </p>
-                  )}
+                  {(() => {
+                    const resort =
+                      booking.resort ??
+                      ({ place_name: "Unknown resort" } as Resort);
+                    return (
+                      <>
+                        <p className="font-bold text-gray-800 dark:text-white text-sm leading-snug line-clamp-1">
+                          {getResortName(resort)}
+                        </p>
+                        {resort.location && (
+                          <p className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-xs mt-1">
+                            <FaMapMarkerAlt className="shrink-0" />
+                            <span className="line-clamp-1">
+                              {resort.location}
+                            </span>
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    {new Date(booking.startDate).toLocaleDateString()} &rarr;{" "}
-                    {new Date(booking.endDate).toLocaleDateString()}
+                    {formatDate(getBookingStartDate(booking))} &rarr;{" "}
+                    {formatDate(getBookingEndDate(booking))}
                   </p>
                   <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide text-[#0077be] dark:text-[#7fb8e6] bg-blue-50 dark:bg-white/10 px-2 py-1 rounded">
                     {booking.unitType}
@@ -291,7 +316,6 @@ const DashboardPage = () => {
         </div>
 
         {/* Explore more resorts */}
-        
       </div>
     </div>
   );
