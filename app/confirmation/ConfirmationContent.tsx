@@ -86,7 +86,12 @@ const ConfirmationContent = () => {
         <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row">
             <div className="relative w-full sm:w-44 h-40 shrink-0">
-              <ResortImage src={resort.img} alt={resortName} sizes="176px" />
+              <ResortImage
+                src={resort.img}
+                alt={resortName}
+                seed={resort._id || resortName}
+                sizes="176px"
+              />
             </div>
             <div className="p-4 grow">
               <h2 className="text-lg font-bold text-[#18294B] dark:text-white">{resortName}</h2>

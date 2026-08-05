@@ -54,6 +54,8 @@ const ResortDetailContent = ({ resort }: ResortDetailContentProps) => {
           <ResortImage
             src={images[activeImageIndex]}
             alt={resortName}
+            seed={resort._id || resortName}
+            seedOffset={activeImageIndex}
             priority
             sizes="(min-width: 1024px) 980px, 100vw"
           />
@@ -75,6 +77,8 @@ const ResortDetailContent = ({ resort }: ResortDetailContentProps) => {
                 <ResortImage
                   src={image}
                   alt={`${resortName} photo ${index + 1}`}
+                  seed={resort._id || resortName}
+                  seedOffset={index}
                   sizes="96px"
                 />
               </button>

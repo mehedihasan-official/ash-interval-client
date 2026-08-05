@@ -4,9 +4,13 @@
 // dataset (1,700+ records) stores photos as up to four separate fields
 // (img, img2, img3, img4) rather than a single `images` array, and any
 // given resort may have some, all, or none of them populated — so this
-// tries each candidate URL in order and only falls back to a local
-// placeholder once every candidate has failed (or none were provided).
-import placeholder from "@/app/asset/images/home-slider-4.jpg";
+// tries each candidate URL in order. A meaningful chunk of the dataset's
+// stored URLs are dead links (moved/removed on the source host), so
+// rather than fall through to a single repeated local placeholder once
+// every candidate has failed, this shows a real resort/vacation-property
+// photo from a curated pool instead — keeping the card and gallery
+// looking like a working listing instead of a broken-image box.
+import { getFallbackResortImage } from "@/lib/resortFallbackImages";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -19,6 +23,16 @@ interface ResortImageProps {
   sizes?: string;
   priority?: boolean;
   className?: string;
+  // Stable identifier for the resort (e.g. resort._id or name) used to
+  // deterministically pick which fallback photo to show, so the same
+  // resort always shows the same fallback instead of a different random
+  // image on every render. Falls back to `alt` when not provided, since
+  // every call site already passes a resort-specific alt text.
+  seed?: string;
+  // When a resort's gallery shows several broken slots at once (e.g.
+  // thumbnails), pass a different offset per slot so each one gets a
+  // distinct fallback photo instead of the same image repeated.
+  seedOffset?: number;
 }
 
 // Narrows a src prop (single value or array) down to the list of
@@ -37,6 +51,8 @@ const ResortImage = ({
   sizes = "100vw",
   priority = false,
   className = "object-cover",
+  seed,
+  seedOffset = 0,
 }: ResortImageProps) => {
   const candidates = getCandidates(src);
 
@@ -48,15 +64,15 @@ const ResortImage = ({
   const candidateIndex =
     failedSource?.key === sourceKey ? failedSource.index : 0;
 
-  const imageSource =
-    candidateIndex < candidates.length
-      ? candidates[candidateIndex]
-      : placeholder;
+  const usingFallback = candidateIndex >= candidates.length;
+  const imageSource = usingFallback
+    ? getFallbackResortImage(seed || alt, seedOffset)
+    : candidates[candidateIndex];
 
   const handleError = () => {
     // Only advance if we're still within the real candidates — once
-    // we've fallen through to the placeholder there's nothing left to
-    // try, so don't loop.
+    // we've fallen through to the fallback photo there's nothing left to
+    // try (the fallback pool is assumed reliable), so don't loop.
     if (candidateIndex < candidates.length) {
       setFailedSource({ key: sourceKey, index: candidateIndex + 1 });
     }

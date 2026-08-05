@@ -41,7 +41,12 @@ const BookingCard = ({ booking }: { booking: Booking }) => {
     <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
       <div className="flex flex-col sm:flex-row">
         <div className="relative w-full sm:w-40 h-36 shrink-0">
-          <ResortImage src={resort.img} alt={resortName} sizes="160px" />
+          <ResortImage
+            src={resort.img}
+            alt={resortName}
+            seed={resort._id || resortName}
+            sizes="160px"
+          />
         </div>
         <div className="p-4 grow">
           <div className="flex items-start justify-between gap-3 mb-2">

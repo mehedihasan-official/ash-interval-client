@@ -28,6 +28,7 @@ const ResortCard = ({ resort }: ResortCardProps) => {
         <ResortImage
           src={image}
           alt={name}
+          seed={resort._id || name}
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover transition duration-300 group-hover:scale-105"
         />

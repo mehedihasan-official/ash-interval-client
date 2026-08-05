@@ -149,7 +149,12 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
         <div className="border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden mb-8 shadow-sm bg-white dark:bg-[#16223d]">
           <div className="flex flex-col sm:flex-row">
             <div className="relative w-full sm:w-56 h-48 sm:h-auto shrink-0">
-              <ResortImage src={resort.img} alt={resortName} sizes="224px" />
+              <ResortImage
+                src={resort.img}
+                alt={resortName}
+                seed={resort._id || resortName}
+                sizes="224px"
+              />
             </div>
             <div className="p-6 grow flex flex-col justify-center">
               <div className="flex items-start justify-between gap-3">
