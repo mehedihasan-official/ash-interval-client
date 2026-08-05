@@ -43,7 +43,7 @@ to `cashBalance`. Recompute everything server-side — never trust a
 client-sent amount:
 
 ```js
-const POINTS_TO_USD_RATE = 0.025;       // 1 point = $0.025 (matches booking pricing)
+const POINTS_TO_USD_RATE = 0.05;        // 1 point = $0.05 (matches lib/api/wallet.ts)
 const COMMISSION_RATE = 0.3;            // 30%
 
 grossAmount = points * POINTS_TO_USD_RATE;
@@ -70,11 +70,11 @@ Response:
   "success": true,
   "data": {
     "points": 500,           // updated balance
-    "cashBalance": 12.5,     // updated balance
+    "cashBalance": 17.5,     // updated balance
     "pointsConverted": 500,
-    "grossAmount": 12.5,
-    "commissionAmount": 3.75,
-    "netAmount": 8.75
+    "grossAmount": 25,
+    "commissionAmount": 7.5,
+    "netAmount": 17.5
   }
 }
 ```
@@ -82,3 +82,75 @@ Response:
 Use a MongoDB transaction or a single atomic `findOneAndUpdate` with a
 `points >= $points` filter guard to avoid a race where two simultaneous
 conversion requests could push the balance negative.
+
+---
+
+# Admin panel — backend requirements
+
+The admin panel (`/dashboard/admin/*`, see `lib/api/admin.ts`) needs three
+more routes on the same backend. All three should require the caller to be
+an authenticated admin — check `isAdmin` on the requesting user server-side,
+don't rely on the frontend's route guard alone, since anyone can call the
+API directly.
+
+## 5. `GET /api/all-users`
+
+Returns every registered user (admins and regular members).
+
+```js
+// 200
+{
+  "success": true,
+  "data": [
+    { "_id": "...", "name": "Jane Doe", "email": "jane@example.com", "isAdmin": false, "points": 1000, "cashBalance": 0, "createdAt": "..." },
+    { "_id": "...", "name": "Admin User", "email": "admin@example.com", "isAdmin": true, "points": 1000, "cashBalance": 0, "createdAt": "..." }
+  ]
+}
+```
+
+## 6. `PATCH /api/update-user`
+
+Body: `{ "email": string, "isAdmin": boolean }`
+
+Updates one user's `isAdmin` flag and returns the updated record.
+
+```js
+// 200
+{ "success": true, "data": { "_id": "...", "name": "Jane Doe", "email": "jane@example.com", "isAdmin": true, "points": 1000, "cashBalance": 0 } }
+```
+
+Validation:
+- 404 if no user exists with that email.
+- Reject (400/403) a request that would remove `isAdmin` from the account
+  making the request — the frontend already disables this in the UI, but
+  the backend should enforce it too so the rule can't be bypassed by
+  calling the API directly.
+
+## 7. `POST /api/resorts` — create a resort (admin-only)
+
+Body matches `CreateResortInput` in `lib/api/admin.ts`:
+
+```js
+{
+  "resortName": "...", "location": "...", "symbol": "...", "region": "...",
+  "country": "...", "continent": "...", "description": "...",
+  "onSite": "...", "nearby": "...", "contactInfo": "...",
+  "nearestAirport": "...", "checkInDays": ["Saturday", "Sunday"],
+  "img": "...", "img2": "...", "img3": "...", "img4": "..."
+}
+```
+
+Saves a new document in the same `Resort` collection `GET /api/resorts`
+already reads from, and returns it (with its generated `_id`):
+
+```js
+// 201
+{ "success": true, "data": { "_id": "...", "resortName": "...", ... } }
+```
+
+If the existing resort-creation route on your server is already named
+something else (e.g. the legacy `/api/add-resort` from an earlier version
+of this project), either add `/api/resorts` as a POST route alongside it,
+or tell me the actual route name and I'll point `lib/api/admin.ts` at it
+instead — that's a one-line change.
+

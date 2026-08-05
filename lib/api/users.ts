@@ -151,6 +151,8 @@ async function syncUser(
         name: user.name.trim() || email.split("@")[0],
         email,
         isAdmin: false,
+        points: 0,
+        cashBalance: 0,
       };
     }
 

@@ -44,12 +44,16 @@ const getInitialTheme = (): Theme => {
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme>("light");
+  // Lazy initializer reads the class the inline script already applied,
+  // so `theme` is correct from the first render — no useEffect needed to
+  // "correct" it after mount, which avoids an extra synchronous render.
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
-    const initialTheme = getInitialTheme();
-    setThemeState(initialTheme);
-    applyThemeClass(initialTheme);
+    applyThemeClass(theme);
+    // Only needs to run once, to sync the class for the initial theme —
+    // setTheme() below already re-applies it on every later change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setTheme = (next: Theme) => {
