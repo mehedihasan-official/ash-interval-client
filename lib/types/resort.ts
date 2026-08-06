@@ -63,6 +63,36 @@ export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 export const getResortName = (resort: Resort): string =>
   resort.resortName || resort.place_name || "Unnamed resort";
 
+export const dedupeResorts = (resorts: Resort[]): Resort[] => {
+  const seen = new Set<string>();
+  const deduped: Resort[] = [];
+
+  for (const resort of resorts) {
+    const id =
+      typeof resort._id === "string" && resort._id.trim().length > 0
+        ? resort._id.trim()
+        : "";
+
+    const fallbackKey = [
+      getResortName(resort),
+      getResortCountry(resort) ?? "",
+      typeof resort.location === "string" ? resort.location.trim() : "",
+      typeof resort.symbol === "string" ? resort.symbol.trim() : "",
+      typeof resort.description === "string" ? resort.description.trim() : "",
+    ]
+      .filter(Boolean)
+      .join("::");
+
+    const key = id || fallbackKey;
+    if (!key || seen.has(key)) continue;
+
+    seen.add(key);
+    deduped.push(resort);
+  }
+
+  return deduped;
+};
+
 export const getResortImages = (resort: Resort): string[] => {
   const apiImages = [resort.img, resort.img2, resort.img3, resort.img4];
   const additionalImages = Array.isArray(resort.images) ? resort.images : [];

@@ -2,11 +2,12 @@
 // Every function here mirrors one backend route and unwraps the
 // { success, message, data } envelope the API always responds with,
 // so calling code just works with plain data (or a thrown Error).
-import type {
-  ApiResponse,
-  Resort,
-  ResortPagination,
-  ResortSearchResult,
+import {
+  dedupeResorts,
+  type ApiResponse,
+  type Resort,
+  type ResortPagination,
+  type ResortSearchResult,
 } from "@/lib/types/resort";
 
 export interface ResortSearchParams {
@@ -147,13 +148,15 @@ function normalizeResortSearchResult(
     ? undefined
     : result.pagination;
 
+  const dedupedResorts = dedupeResorts(resorts);
+
   return {
-    resorts,
+    resorts: dedupedResorts,
     pagination: {
       page: sourcePagination?.page ?? 1,
-      limit: sourcePagination?.limit ?? resorts.length,
-      total: sourcePagination?.total ?? resorts.length,
-      totalPages: sourcePagination?.totalPages ?? (resorts.length > 0 ? 1 : 0),
+      limit: sourcePagination?.limit ?? dedupedResorts.length,
+      total: sourcePagination?.total ?? dedupedResorts.length,
+      totalPages: sourcePagination?.totalPages ?? (dedupedResorts.length > 0 ? 1 : 0),
     },
   };
 }
@@ -206,5 +209,5 @@ export async function fetchAllResorts(): Promise<Resort[]> {
     allResorts.push(...result.resorts);
   }
 
-  return allResorts;
+  return dedupeResorts(allResorts);
 }

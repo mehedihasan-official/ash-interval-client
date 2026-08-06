@@ -154,17 +154,7 @@ const DashboardPage = () => {
             role === "admin" ? "lg:grid-cols-8" : "lg:grid-cols-7"
           }`}
         >
-          {role === "admin" && (
-            <Link
-              href="/dashboard/admin"
-              className="bg-[#18294B] dark:bg-[#101b30] border border-[#18294B] dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition"
-            >
-              <FaUserShield className="text-white w-5 h-5" />
-              <span className="text-xs font-semibold text-white">
-                Owner Details
-              </span>
-            </Link>
-          )}
+          
           <Link
             href="/resort-directory"
             className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
@@ -233,7 +223,31 @@ const DashboardPage = () => {
             <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
               {isLoading ? "..." : upcomingBookings.length} Upcoming
             </span>
+             {role === "admin" && (
+            <Link
+              href="/dashboard/admin"
+              className="bg-[#18294B] dark:bg-[#101b30] border border-[#18294B] dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition"
+            >
+              <FaUserShield className="text-white w-5 h-5" />
+              <span className="text-xs font-semibold text-white">
+                Owner Details
+              </span>
+            </Link>
+          )}
           </div>
+
+          
+               {role === "admin" && (
+            <Link
+              href="/dashboard/admin"
+              className="bg-[#18294B] dark:bg-[#101b30] border border-[#18294B] dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition"
+            >
+              <FaUserShield className="text-white w-5 h-5" />
+              <span className="text-xs font-semibold text-white">
+                Owner Details
+              </span>
+            </Link>
+          )}
         </div>
 
         {/* Upcoming bookings */}
@@ -251,6 +265,10 @@ const DashboardPage = () => {
                 View all &rarr;
               </Link>
             )}
+
+           
+
+         
           </div>
 
           {isLoading ? (
