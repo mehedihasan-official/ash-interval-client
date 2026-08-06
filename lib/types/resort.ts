@@ -9,6 +9,7 @@
 
 export interface Resort {
   _id: string;
+  name?: string;
   place_name: string;
   resortName?: string;
   country?: string;
@@ -61,7 +62,7 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export const getResortName = (resort: Resort): string =>
-  resort.resortName || resort.place_name || "Unnamed resort";
+  resort.resortName || resort.place_name || resort.name || "Unnamed resort";
 
 export const dedupeResorts = (resorts: Resort[]): Resort[] => {
   const seen = new Set<string>();

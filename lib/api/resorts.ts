@@ -125,6 +125,17 @@ export async function searchResorts(
   return normalizeResortSearchResult(result);
 }
 
+/**
+ * Read the backend's database total without downloading every resort.
+ * This is used by admin stats, where the correct number is the Mongo
+ * document count from pagination.total rather than the client-side list
+ * length after grouping/dedupe behavior.
+ */
+export async function fetchResortCount(): Promise<number> {
+  const result = await searchResorts({ page: 1, limit: 1 });
+  return result.pagination.total;
+}
+
 function normalizeResortSearchResult(
   result:
     | Resort[]

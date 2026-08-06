@@ -11,12 +11,13 @@ import { useAuth } from "@/lib/providers/AuthProvider";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { FaBars, FaHotel, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
+import { FaBars, FaHotel, FaPlus, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
 
 const adminLinks = [
   { name: "Overview", href: "/dashboard/admin", icon: FaTachometerAlt },
   { name: "Registered Users", href: "/dashboard/admin/users", icon: FaUsers },
-  { name: "Add Resort", href: "/dashboard/admin/resorts/new", icon: FaHotel },
+  { name: "Resorts", href: "/dashboard/admin/resorts", icon: FaHotel },
+  { name: "Add Resort", href: "/dashboard/admin/resorts/new", icon: FaPlus },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

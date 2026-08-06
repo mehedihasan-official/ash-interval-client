@@ -6,7 +6,7 @@
 // requiring a dedicated backend stats endpoint that doesn't exist yet.
 import Loading from "@/components/resorts/Loading";
 import { fetchAllUsers, type AdminUser } from "@/lib/api/admin";
-import { fetchAllResorts } from "@/lib/api/resorts";
+import { fetchResortCount } from "@/lib/api/resorts";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -28,11 +28,11 @@ const AdminOverviewPage = () => {
       try {
         const [usersResult, resorts] = await Promise.all([
           fetchAllUsers(),
-          fetchAllResorts(),
+          fetchResortCount(),
         ]);
         if (isCancelled) return;
         setUsers(usersResult);
-        setResortCount(resorts.length);
+        setResortCount(resorts);
       } catch (error) {
         if (isCancelled) return;
         setErrorMessage(
@@ -97,7 +97,7 @@ const AdminOverviewPage = () => {
         </Link>
 
         <Link
-          href="/dashboard/admin/resorts/new"
+          href="/dashboard/admin/resorts"
           className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-6 text-white shadow-sm hover:shadow-md transition"
         >
           <div className="flex items-center justify-between">
@@ -107,7 +107,7 @@ const AdminOverviewPage = () => {
             </div>
             <FaHotel className="w-9 h-9 text-white/70" />
           </div>
-          <p className="text-xs mt-4 text-white/70">Add a new resort &rarr;</p>
+          <p className="text-xs mt-4 text-white/70">Manage all resorts &rarr;</p>
         </Link>
       </div>
     </div>
