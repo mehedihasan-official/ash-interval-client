@@ -4,7 +4,9 @@
 // the backend's message on failure). See SERVER_NOTES.md for the exact
 // backend routes/schema these calls expect — that server code lives in the
 // separate interval-ash-server repo, not in this frontend project.
+import firebaseApp, { isFirebaseConfigured } from "@/lib/firebase/firebase.config";
 import type { ApiResponse, Resort } from "@/lib/types/resort";
+import { getAuth } from "firebase/auth";
 
 function getApiBaseUrl(): string {
   return (
@@ -12,8 +14,21 @@ function getApiBaseUrl(): string {
   ).replace(/\/$/, "");
 }
 
+// The backend identifies the calling admin by this header (see
+// interval-ash-server's requireAdmin middleware) rather than a bearer
+// token, matching how the rest of this app already treats the signed-in
+// Firebase user's email as the admin identity (AuthProvider looks up
+// `isAdmin` in Mongo by that same email). Reading it here, in the shared
+// fetch helper, means every admin call below sends it automatically
+// instead of each function having to thread it through by hand.
+function getCurrentUserEmail(): string | null {
+  if (!isFirebaseConfigured || !firebaseApp) return null;
+  return getAuth(firebaseApp).currentUser?.email ?? null;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${getApiBaseUrl()}${path}`;
+  const callerEmail = getCurrentUserEmail();
 
   let response: Response;
   try {
@@ -21,6 +36,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
       headers: {
         "Content-Type": "application/json",
+        ...(callerEmail ? { "x-user-email": callerEmail } : {}),
         ...init?.headers,
       },
     });
@@ -117,6 +133,23 @@ export interface CreateResortInput {
 export async function createResort(input: CreateResortInput): Promise<Resort> {
   return apiFetch<Resort>("/resorts", {
     method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+// Same field set as CreateResortInput, but every field is optional since
+// an edit only needs to send what actually changed (or, in this form's
+// case, the full set re-derived from the existing resort — either way
+// the backend applies these with $set, so omitted fields are left alone).
+export type UpdateResortInput = Partial<CreateResortInput>;
+
+/** Updates an existing resort listing by id. Admin-only on the backend. */
+export async function updateResort(
+  id: string,
+  input: UpdateResortInput,
+): Promise<Resort> {
+  return apiFetch<Resort>(`/resorts/${encodeURIComponent(id)}`, {
+    method: "PATCH",
     body: JSON.stringify(input),
   });
 }

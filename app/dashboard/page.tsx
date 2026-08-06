@@ -161,7 +161,7 @@ const DashboardPage = () => {
             >
               <FaUserShield className="text-white w-5 h-5" />
               <span className="text-xs font-semibold text-white">
-                Admin Panel
+                Owner Details
               </span>
             </Link>
           )}

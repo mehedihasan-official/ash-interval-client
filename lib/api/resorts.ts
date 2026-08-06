@@ -167,18 +167,11 @@ export async function getResortById(id: string): Promise<Resort | null> {
   return apiFetch<Resort>(`/resorts/${encodeURIComponent(id)}`);
 }
 
-// The backend caps a single request's `limit` at 50, but browsing by
-// country/region needs the *entire* dataset (1,700+ resorts) available
-// client-side to group by country and derive regions accurately —
-// otherwise "browse by country" would only ever reflect whichever 50
-// resorts happened to load first. This walks every page automatically.
-const MAX_PAGE_SIZE = 50;
-
-// A hard ceiling on how many pages we'll walk, purely as a safety net
-// against an unexpected backend bug (e.g. `total` never converging)
-// turning into an infinite request loop. 1,700 resorts / 50 per page
-// is ~34 pages, so 200 pages (10,000 resorts) leaves generous headroom.
-const MAX_PAGES = 200;
+// The directory flow needs the full resort dataset available client-side
+// to build the country/region hierarchy accurately. Rather than making
+// dozens of small page requests, fetch the dataset in larger chunks and
+// only request the remaining pages if the backend reports more than one.
+const FULL_DATASET_PAGE_SIZE = 1000;
 
 /**
  * Fetch every resort in the dataset by walking all pages of
@@ -187,17 +180,30 @@ const MAX_PAGES = 200;
  * dataset client-side instead of only ever seeing one page at a time.
  */
 export async function fetchAllResorts(): Promise<Resort[]> {
-  const allResorts: Resort[] = [];
-  let page = 1;
+  const firstPage = await searchResorts({
+    page: 1,
+    limit: FULL_DATASET_PAGE_SIZE,
+  });
 
-  while (page <= MAX_PAGES) {
-    const result = await searchResorts({ page, limit: MAX_PAGE_SIZE });
+  const allResorts: Resort[] = [...firstPage.resorts];
+
+  if (firstPage.pagination.totalPages <= 1) {
+    return allResorts;
+  }
+
+  const remainingPages = Array.from(
+    { length: firstPage.pagination.totalPages - 1 },
+    (_, index) => index + 2,
+  );
+
+  const remainingResults = await Promise.all(
+    remainingPages.map((page) =>
+      searchResorts({ page, limit: FULL_DATASET_PAGE_SIZE }),
+    ),
+  );
+
+  for (const result of remainingResults) {
     allResorts.push(...result.resorts);
-
-    if (page >= result.pagination.totalPages || result.resorts.length === 0) {
-      break;
-    }
-    page += 1;
   }
 
   return allResorts;

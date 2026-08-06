@@ -154,3 +154,42 @@ of this project), either add `/api/resorts` as a POST route alongside it,
 or tell me the actual route name and I'll point `lib/api/admin.ts` at it
 instead — that's a one-line change.
 
+## 8. `PATCH /api/resorts/:id` — edit a resort (admin-only)
+
+Body is a partial `CreateResortInput` (`UpdateResortInput` in
+`lib/api/admin.ts`) — only the fields being changed need to be sent, though
+the edit form currently sends the full set every time:
+
+```js
+// 200
+{ "success": true, "data": { "_id": "...", "resortName": "...", ... } }
+```
+
+404 if no resort exists with that id.
+
+## How the backend identifies "is this caller an admin?"
+
+Every request from `lib/api/admin.ts` (create/edit resort, list users,
+change a user's role) now carries an `x-user-email` header set to the
+signed-in Firebase user's email — see `getCurrentUserEmail()` in that file.
+The backend's `requireAdmin` middleware looks that email up in the `User`
+collection and checks `isAdmin`, rejecting with 401 (no/unrecognized email)
+or 403 (recognized but not an admin) before the route handler runs. This is
+the same `isAdmin` field the frontend's `AuthProvider` already trusts, so
+there's one consistent source of truth for who's an admin — it is not a
+verified Firebase ID token, so it stops casual/direct API calls but not a
+determined attacker who knows another admin's email. Swapping in real
+token verification (`firebase-admin`'s `verifyIdToken`) later would only
+mean changing what `requireAdmin` reads the caller's identity from — the
+route wiring and the 401/403 behavior stay the same.
+
+## 9. The resort card's edit icon
+
+`components/resorts/ResortCard.tsx` shows a small pencil icon (top-right of
+the thumbnail) only when the signed-in user's role is `"admin"`. Clicking
+it goes to `/dashboard/admin/resorts/[id]/edit`, which loads the resort via
+the existing `GET /api/resorts/:id`, prefills the same fields as "Add
+Resort," and saves via the new `PATCH /api/resorts/:id` above. Non-admins
+and signed-out visitors never see the icon and the route itself is behind
+the same admin guard as the rest of `/dashboard/admin/*`.
+
