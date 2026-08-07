@@ -14,10 +14,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   FaCalendarAlt,
+  FaCar,
   FaCoins,
   FaCompass,
   FaExchangeAlt,
   FaMapMarkerAlt,
+  FaPlane,
+  FaShip,
   FaSuitcaseRolling,
   FaUserCircle,
   FaUserShield,
@@ -144,6 +147,66 @@ const DashboardPage = () => {
               <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-white">
                 {isLoading ? "..." : formatUsd(wallet?.cashBalance ?? 0)}
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Travel services (flights / cars / cruises). Only Flights is
+            fully implemented for now; Cars and Cruises show a "coming
+            soon" tag so members can see the roadmap without accidentally
+            landing on a broken page. */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-[#0077be] rounded-full" />
+            Travel Services
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link
+              href="/flights"
+              className="group bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center gap-4 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
+            >
+              <div className="w-12 h-12 rounded-full bg-[#0077be]/10 dark:bg-white/10 flex items-center justify-center">
+                <FaPlane className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-gray-800 dark:text-white">Flights</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Book with member savings
+                </p>
+              </div>
+              <span className="text-xs font-bold text-[#0077be] dark:text-[#7fb8e6] group-hover:translate-x-1 transition-transform">
+                &rarr;
+              </span>
+            </Link>
+            <div
+              className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center gap-4 opacity-70 cursor-not-allowed"
+              aria-disabled
+            >
+              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
+                <FaCar className="text-gray-400 w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-gray-800 dark:text-white">
+                  Car Rentals
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Coming soon
+                </p>
+              </div>
+            </div>
+            <div
+              className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center gap-4 opacity-70 cursor-not-allowed"
+              aria-disabled
+            >
+              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
+                <FaShip className="text-gray-400 w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-gray-800 dark:text-white">Cruises</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Coming soon
+                </p>
+              </div>
             </div>
           </div>
         </div>
