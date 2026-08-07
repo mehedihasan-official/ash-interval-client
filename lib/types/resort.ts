@@ -64,6 +64,28 @@ export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 export const getResortName = (resort: Resort): string =>
   resort.resortName || resort.place_name || resort.name || "Unnamed resort";
 
+export const normalizeResortText = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const collectStringValues = (value: unknown): string[] => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(collectStringValues);
+  }
+
+  return [];
+};
+
 export const dedupeResorts = (resorts: Resort[]): Resort[] => {
   const seen = new Set<string>();
   const deduped: Resort[] = [];
@@ -125,6 +147,44 @@ export const getResortCountry = (resort: Resort): string | null => {
   return typeof country === "string" && country.trim() ? country.trim() : null;
 };
 
+const LOCATION_FIELD_NAMES = [
+  "location",
+  "country",
+  "region",
+  "continent",
+  "city",
+  "state",
+  "province",
+  "destination",
+  "area",
+  "resortArea",
+  "address",
+] as const;
+
+export const getResortLocationTextValues = (resort: Resort): string[] => {
+  const values = LOCATION_FIELD_NAMES.flatMap((field) =>
+    collectStringValues(resort[field]),
+  );
+
+  return Array.from(new Set(values));
+};
+
+export const resortMatchesLocation = (
+  resort: Resort,
+  location: string,
+): boolean => {
+  const normalizedLocation = normalizeResortText(location);
+  if (!normalizedLocation) return false;
+
+  return getResortLocationTextValues(resort).some((value) => {
+    const normalizedValue = normalizeResortText(value);
+    return (
+      normalizedValue === normalizedLocation ||
+      normalizedValue.includes(normalizedLocation)
+    );
+  });
+};
+
 /**
  * Every distinct, non-empty country across the given resorts, sorted
  * alphabetically. Used by the top-level Resort Directory page to build
@@ -148,9 +208,17 @@ export const getUniqueRegionsForCountry = (
   resorts: Resort[],
   country: string,
 ): string[] => {
+  const normalizedCountry = normalizeResortText(country);
   const regions = new Set<string>();
   for (const resort of resorts) {
-    if (getResortCountry(resort) !== country) continue;
+    const resortCountry = getResortCountry(resort);
+    if (
+      !resortCountry ||
+      normalizeResortText(resortCountry) !== normalizedCountry
+    ) {
+      continue;
+    }
+
     for (const region of getResortRegions(resort)) regions.add(region);
   }
   return Array.from(regions).sort((a, b) => a.localeCompare(b));

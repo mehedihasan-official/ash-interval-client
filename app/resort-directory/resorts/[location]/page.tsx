@@ -8,7 +8,7 @@ import Loading from "@/components/resorts/Loading";
 import ResortCard from "@/components/resorts/ResortCard";
 import ResortLoadError from "@/components/resorts/ResortLoadError";
 import { useResortData } from "@/lib/providers/ResortDataProvider";
-import { getResortCountry, getResortRegions } from "@/lib/types/resort";
+import { resortMatchesLocation } from "@/lib/types/resort";
 import Link from "next/link";
 import { use } from "react";
 import { FaMapMarkedAlt } from "react-icons/fa";
@@ -43,10 +43,8 @@ const ResortsByLocationPage = ({ params }: ResortsByLocationPageProps) => {
     );
   }
 
-  const matchingResorts = resorts.filter(
-    (resort) =>
-      getResortCountry(resort) === location ||
-      getResortRegions(resort).includes(location),
+  const matchingResorts = resorts.filter((resort) =>
+    resortMatchesLocation(resort, location),
   );
 
   return (

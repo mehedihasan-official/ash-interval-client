@@ -6,7 +6,7 @@ import Loading from "@/components/resorts/Loading";
 import ResortImage from "@/components/resorts/ResortImage";
 import { fetchBookingsByEmail, type Booking } from "@/lib/api/bookings";
 import { useAuth } from "@/lib/providers/AuthProvider";
-import { getResortName } from "@/lib/types/resort";
+import { getResortName, type Resort } from "@/lib/types/resort";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -28,7 +28,11 @@ const isUpcoming = (booking: Booking) =>
   getBookingStartDate(booking).getTime() >= Date.now();
 
 const BookingCard = ({ booking }: { booking: Booking }) => {
-  const resort = booking.resort ?? ({ place_name: "Unknown resort" } as any);
+  const fallbackResort: Resort = {
+    _id: booking._id,
+    place_name: "Unknown resort",
+  };
+  const resort = booking.resort ?? fallbackResort;
   const resortName = getResortName(resort);
   const isPoints = booking.paymentMethod === "points";
   const nights = booking.nights ?? 1;

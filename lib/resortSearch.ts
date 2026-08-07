@@ -2,26 +2,58 @@
 // (Single Destination, Search All Destinations, Resort Name or Code) and
 // the /search results page. Kept in one place so every entry point
 // ranks and filters resorts the same way.
-import { getResortCountry, getResortName, type Resort } from "@/lib/types/resort";
+import {
+  getResortCountry,
+  getResortLocationTextValues,
+  getResortName,
+  normalizeResortText,
+  type Resort,
+} from "@/lib/types/resort";
+
+const collectStringValues = (value: unknown): string[] => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(collectStringValues);
+  }
+
+  return [];
+};
+
+const getResortSearchTextValues = (resort: Resort): string[] => {
+  const values = [
+    getResortName(resort),
+    ...collectStringValues(resort.name),
+    ...collectStringValues(resort.resortName),
+    ...collectStringValues(resort.place_name),
+    ...collectStringValues(resort.symbol),
+    ...collectStringValues(resort.description),
+    ...getResortLocationTextValues(resort),
+  ];
+
+  return Array.from(new Set(values.filter(Boolean)));
+};
+
+const getNormalizedSearchText = (resort: Resort): string =>
+  getResortSearchTextValues(resort).map(normalizeResortText).join(" ");
 
 /**
  * Simple substring search across resort name, place name, and location.
  * Used by "Single Destination" and the results page's own re-filter.
  */
 export const matchesDestination = (resort: Resort, query: string): boolean => {
-  const queryLower = query.trim().toLowerCase();
-  if (!queryLower) return false;
+  const normalizedQuery = normalizeResortText(query);
+  if (!normalizedQuery) return false;
 
-  const resortName = getResortName(resort).toLowerCase();
-  const placeName = resort.place_name?.toLowerCase() || "";
-  const location = resort.location?.toLowerCase() || "";
-  const country = getResortCountry(resort)?.toLowerCase() || "";
+  const searchableText = getNormalizedSearchText(resort);
+  const queryWords = normalizedQuery.split(/\s+/).filter(Boolean);
 
   return (
-    resortName.includes(queryLower) ||
-    placeName.includes(queryLower) ||
-    location.includes(queryLower) ||
-    country.includes(queryLower)
+    searchableText.includes(normalizedQuery) ||
+    queryWords.every((word) => searchableText.includes(word))
   );
 };
 
@@ -40,28 +72,35 @@ export const scoredDestinationSearch = (
   query: string,
   resorts: Resort[],
 ): ScoredResort[] => {
-  const queryLower = query.trim().toLowerCase();
-  if (!queryLower) return [];
+  const normalizedQuery = normalizeResortText(query);
+  if (!normalizedQuery) return [];
 
-  const queryWords = queryLower.split(/\s+/).filter(Boolean);
+  const queryWords = normalizedQuery.split(/\s+/).filter(Boolean);
 
   return resorts
     .map((resort) => {
       let score = 0;
-      const resortNameLower = getResortName(resort).toLowerCase();
-      const locationLower = resort.location?.toLowerCase() || "";
-      const countryLower = getResortCountry(resort)?.toLowerCase() || "";
-      const placeNameLower = resort.place_name?.toLowerCase() || "";
+      const resortNameLower = normalizeResortText(getResortName(resort));
+      const locationLower = getResortLocationTextValues(resort)
+        .map(normalizeResortText)
+        .join(" ");
+      const countryLower = normalizeResortText(getResortCountry(resort) || "");
+      const placeNameLower = normalizeResortText(resort.place_name || "");
+      const descriptionLower = normalizeResortText(resort.description || "");
 
-      if (resortNameLower === queryLower) {
+      if (resortNameLower === normalizedQuery) {
         score += 10;
       }
+
+      if (locationLower.includes(normalizedQuery)) score += 6;
+      if (countryLower === normalizedQuery) score += 5;
 
       for (const word of queryWords) {
         if (resortNameLower.includes(word)) score += 3;
         if (placeNameLower.includes(word)) score += 2;
-        if (locationLower.includes(word)) score += 2;
-        if (countryLower.includes(word)) score += 1;
+        if (locationLower.includes(word)) score += 3;
+        if (countryLower.includes(word)) score += 2;
+        if (descriptionLower.includes(word)) score += 1;
       }
 
       return { ...resort, _searchScore: score };
@@ -72,13 +111,13 @@ export const scoredDestinationSearch = (
 
 /** Matches on resort name or resort code/symbol. Used by "Resort Name or Code". */
 export const matchesNameOrCode = (resort: Resort, query: string): boolean => {
-  const queryLower = query.trim().toLowerCase();
-  if (!queryLower) return false;
+  const normalizedQuery = normalizeResortText(query);
+  if (!normalizedQuery) return false;
 
-  const resortName = getResortName(resort).toLowerCase();
-  const symbol = resort.symbol?.toLowerCase() || "";
+  const resortName = normalizeResortText(getResortName(resort));
+  const symbol = normalizeResortText(resort.symbol || "");
 
-  return resortName.includes(queryLower) || symbol.includes(queryLower);
+  return resortName.includes(normalizedQuery) || symbol.includes(normalizedQuery);
 };
 
 /**
@@ -92,8 +131,9 @@ export const buildSuggestions = (query: string, resorts: Resort[]): string[] => 
   for (const resort of results.slice(0, 8)) {
     const name = getResortName(resort);
     if (name && !suggestions.includes(name)) suggestions.push(name);
-    if (resort.location && !suggestions.includes(resort.location)) {
-      suggestions.push(resort.location);
+    for (const location of getResortLocationTextValues(resort)) {
+      if (!suggestions.includes(location)) suggestions.push(location);
+      if (suggestions.length >= 5) break;
     }
     const country = getResortCountry(resort);
     if (country && !suggestions.includes(country)) suggestions.push(country);

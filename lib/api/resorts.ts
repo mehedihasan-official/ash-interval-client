@@ -17,6 +17,7 @@ export interface ResortSearchParams {
   maxPrice?: number;
   page?: number;
   limit?: number;
+  all?: boolean;
 }
 
 // Resolves the backend base URL once, so a missing/misconfigured env
@@ -110,6 +111,7 @@ export async function searchResorts(
     query.set("maxPrice", String(params.maxPrice));
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
+  if (params.all) query.set("all", "true");
 
   const queryString = query.toString();
   const result = await apiFetch<ResortSearchResult>(
@@ -193,7 +195,7 @@ const FULL_DATASET_PAGE_SIZE = 1000;
  * country -> region -> resort browsing flow can group/filter the full
  * dataset client-side instead of only ever seeing one page at a time.
  */
-export async function fetchAllResorts(): Promise<Resort[]> {
+async function fetchAllResortsByPage(): Promise<Resort[]> {
   const firstPage = await searchResorts({
     page: 1,
     limit: FULL_DATASET_PAGE_SIZE,
@@ -221,4 +223,26 @@ export async function fetchAllResorts(): Promise<Resort[]> {
   }
 
   return dedupeResorts(allResorts);
+}
+
+export async function fetchAllResorts(): Promise<Resort[]> {
+  try {
+    const fullResult = await searchResorts({
+      all: true,
+      page: 1,
+      limit: FULL_DATASET_PAGE_SIZE,
+    });
+
+    if (
+      fullResult.pagination.totalPages <= 1 ||
+      fullResult.resorts.length >= fullResult.pagination.total
+    ) {
+      return fullResult.resorts;
+    }
+  } catch {
+    // Fall back to page-walking below. This keeps the directory working
+    // against older deployments or response-size-limited environments.
+  }
+
+  return fetchAllResortsByPage();
 }
