@@ -84,6 +84,10 @@ export interface CreateFlightBookingInput {
   contactInfo: { email: string; phone: string };
   addOns: FlightBookingAddOns;
   paymentMethod: "cash" | "points";
+  // Sent when the user booked a flight whose route was synthesized on
+  // the fly (most searches). Lets the server snapshot the actual route
+  // the user saw instead of the template flight's original route.
+  routeOverride?: { origin: string; destination: string };
 }
 
 export interface FlightBooking extends CreateFlightBookingInput {

@@ -137,6 +137,10 @@ const FlightPaymentPage = () => {
           seatSelections: draft.addOns?.seatSelections ?? [],
         },
         paymentMethod,
+        // Always send the route the user actually searched — the server
+        // uses it to snapshot the correct origin/destination even when
+        // the selected flight was a synthesized-route result.
+        routeOverride: { origin: draft.from, destination: draft.to },
       });
       clearFlightDraft();
       router.push(
