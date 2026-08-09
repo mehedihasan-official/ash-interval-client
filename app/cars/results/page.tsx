@@ -6,9 +6,10 @@
 import { searchCars } from "@/lib/api/cars";
 import { saveCarDraft } from "@/lib/carDraft";
 import type { Car, CarSearchResult } from "@/lib/types/car";
+import CarImage from "@/components/cars/CarImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { FaCar, FaCogs, FaGasPump, FaSnowflake, FaStar, FaSuitcase, FaUser } from "react-icons/fa";
+import { FaCogs, FaGasPump, FaSnowflake, FaStar, FaSuitcase, FaUser } from "react-icons/fa";
 
 interface ParsedSearch {
   pickupLocation: string;
@@ -291,16 +292,12 @@ const CarResultCard = ({ car, rentalDays, onSelect }: CarResultCardProps) => {
     <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-6 hover:shadow-md transition">
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_auto] gap-6 items-center">
         <div className="relative h-32 md:h-36 bg-gray-100 dark:bg-white/5 rounded-lg overflow-hidden flex items-center justify-center">
-          {car.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={car.image}
-              alt={car.brand}
-              className="max-h-full max-w-full object-contain"
-            />
-          ) : (
-            <FaCar className="w-12 h-12 text-gray-300" />
-          )}
+          <CarImage
+            src={car.image}
+            category={car.category}
+            alt={car.brand}
+            className="max-h-full max-w-full object-contain"
+          />
         </div>
 
         <div>

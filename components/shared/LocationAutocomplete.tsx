@@ -1,40 +1,50 @@
 "use client";
 
-// Generic suggestion input used across the app whenever a member picks
-// a place from a curated list — car pickup/dropoff (airports) and
-// cruise departure port both use it. Kept generic (any T, custom
-// fetch/label functions) so future travel services can reuse it
-// without needing to duplicate the popup UI or debouncing logic.
-import { useEffect, useRef, useState } from "react";
+// Pill-style location picker used across the app for anything the
+// member selects from a curated list — car pickup/dropoff (airports),
+// cruise departure port, cruise destination. Matches the search-bar
+// pattern the mockups use: a rounded container with an icon on the
+// left, the field label above the editable value, and a dropdown of
+// suggestions with a "Showing available destinations" header.
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { FaMapMarkerAlt } from "react-icons/fa";
 
 interface LocationAutocompleteProps<T> {
   label: string;
   placeholder?: string;
   value: string;
   disabled?: boolean;
-  /** Called on every debounced keystroke; returns matching items. */
+  /** Optional icon override — defaults to a map pin. */
+  icon?: ReactNode;
+  /** Optional header shown above the suggestion list. */
+  suggestionsHeader?: string;
+  /** Debounced fetch — called after the user pauses typing. */
   onSearch: (query: string) => Promise<T[]>;
-  /** Called when the user picks a suggestion; parent stores the final string. */
+  /** Full callback when a suggestion is chosen. */
   onSelect: (displayValue: string, item: T) => void;
-  /** Called on every keystroke (before select) so the parent can mirror the raw input. */
+  /** Raw keystroke callback (parent mirrors the input state). */
   onChange: (value: string) => void;
-  /** Turns an item into the visible primary label ("MCO — Orlando"). */
+  /** Primary label for each suggestion row. */
   getPrimaryLabel: (item: T) => string;
-  /** Optional secondary line ("John F. Kennedy International Airport"). */
+  /** Optional secondary line under the primary label. */
   getSecondaryLabel?: (item: T) => string;
-  /** Turns an item into the string stored back in the input. */
+  /** What to store in the input when the row is chosen. */
   getSelectedValue: (item: T) => string;
-  /** Optional key function for React lists — falls back to primary label. */
+  /** React key helper for suggestions — falls back to the label. */
   getKey?: (item: T) => string;
 }
 
 const DEBOUNCE_MS = 200;
 
-const LocationAutocomplete = <T,>({
+// Function declaration (not `<T,>` arrow) because Next 16's SWC
+// occasionally trips on generic arrow components inside .tsx.
+function LocationAutocomplete<T>({
   label,
   placeholder = "Start typing...",
   value,
   disabled,
+  icon,
+  suggestionsHeader = "Showing available destinations",
   onSearch,
   onSelect,
   onChange,
@@ -42,19 +52,22 @@ const LocationAutocomplete = <T,>({
   getSecondaryLabel,
   getSelectedValue,
   getKey,
-}: LocationAutocompleteProps<T>) => {
+}: LocationAutocompleteProps<T>) {
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<T[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Mirror external value changes (e.g. parent swaps pickup/dropoff).
   useEffect(() => {
     setQuery(value);
   }, [value]);
 
-  // Debounced server search — waits DEBOUNCE_MS after the last keystroke.
+  // Debounced server search — waits DEBOUNCE_MS after the last keystroke
+  // so we don't hit the API on every character.
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length === 0) {
@@ -77,18 +90,19 @@ const LocationAutocomplete = <T,>({
       cancelled = true;
       window.clearTimeout(timer);
     };
-    // onSearch identity is expected to be stable enough — the parent
-    // usually inlines it. Adding it to deps would fire an extra search
-    // per parent render for no benefit.
+    // onSearch identity is expected to be stable enough — adding it to
+    // deps would fire an extra search per parent render for no benefit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  // Click-outside closes the dropdown.
+  // Click-outside closes the dropdown so it doesn't linger while the
+  // member interacts with other form fields.
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
+        setIsFocused(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -101,58 +115,92 @@ const LocationAutocomplete = <T,>({
     onChange(stored);
     onSelect(stored, item);
     setIsOpen(false);
+    setIsFocused(false);
   };
+
+  const containerBorder = isFocused
+    ? "border-[#2563eb] ring-1 ring-[#2563eb]/20"
+    : "border-gray-200 dark:border-white/10";
 
   return (
     <div className="relative" ref={containerRef}>
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-        {label}
-      </label>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={query}
-        disabled={disabled}
-        onChange={(event) => {
-          const next = event.target.value;
-          setQuery(next);
-          onChange(next);
-          setIsOpen(true);
+      {/* The pill: icon on the left, stacked label + editable value on
+          the right. Clicking anywhere on the pill focuses the input. */}
+      <div
+        onClick={() => {
+          if (!disabled) inputRef.current?.focus();
         }}
-        onFocus={() => query.trim().length > 0 && setIsOpen(true)}
-        className="w-full px-4 py-3 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a] text-gray-800 dark:text-white focus:outline-none focus:border-[#0077be] disabled:opacity-60"
-        autoComplete="off"
-      />
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl border bg-white dark:bg-[#16223d] transition ${containerBorder} ${
+          disabled ? "opacity-60 cursor-not-allowed" : "cursor-text"
+        }`}
+      >
+        <span className="text-gray-500 dark:text-gray-400 shrink-0">
+          {icon ?? <FaMapMarkerAlt className="w-4 h-4" />}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-bold text-gray-800 dark:text-white leading-tight">
+            {label}
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder={placeholder}
+            value={query}
+            disabled={disabled}
+            onChange={(event) => {
+              const next = event.target.value;
+              setQuery(next);
+              onChange(next);
+              setIsOpen(true);
+            }}
+            onFocus={() => {
+              setIsFocused(true);
+              if (query.trim().length > 0) setIsOpen(true);
+            }}
+            onBlur={() => setIsFocused(false)}
+            className="w-full bg-transparent text-sm text-gray-600 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
+            autoComplete="off"
+          />
+        </div>
+      </div>
 
       {isOpen && !disabled && (suggestions.length > 0 || isLoading) && (
-        <div className="absolute z-20 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-lg shadow-lg">
-          {isLoading && suggestions.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-              Searching&hellip;
-            </div>
-          ) : (
-            suggestions.map((item, index) => (
-              <button
-                key={getKey ? getKey(item) : `${getPrimaryLabel(item)}-${index}`}
-                type="button"
-                onClick={() => handleSelect(item)}
-                className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-white/5 border-b border-gray-100 dark:border-white/5 last:border-0"
-              >
-                <div className="font-semibold text-gray-800 dark:text-white">
-                  {getPrimaryLabel(item)}
-                </div>
-                {getSecondaryLabel && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                    {getSecondaryLabel(item)}
+        <div className="absolute z-30 top-full left-0 right-0 mt-2 bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl shadow-lg overflow-hidden">
+          <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5">
+            {suggestionsHeader}
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {isLoading && suggestions.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                Searching&hellip;
+              </div>
+            ) : (
+              suggestions.map((item, index) => (
+                <button
+                  key={getKey ? getKey(item) : `${getPrimaryLabel(item)}-${index}`}
+                  type="button"
+                  onClick={() => handleSelect(item)}
+                  className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-white/5 flex items-start gap-3 border-b border-gray-50 dark:border-white/5 last:border-0"
+                >
+                  <FaMapMarkerAlt className="w-4 h-4 mt-0.5 text-[#2563eb] shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-gray-800 dark:text-white truncate">
+                      {getPrimaryLabel(item)}
+                    </div>
+                    {getSecondaryLabel && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {getSecondaryLabel(item)}
+                      </div>
+                    )}
                   </div>
-                )}
-              </button>
-            ))
-          )}
+                </button>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default LocationAutocomplete;

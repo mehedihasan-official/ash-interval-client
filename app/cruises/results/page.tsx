@@ -10,6 +10,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { FaMapMarkerAlt, FaShip, FaStar } from "react-icons/fa";
 
+// Maps the new search page's duration buckets to the min/max night
+// range this page filters cruises by. Kept in sync with the DURATION
+// dropdown in app/cruises/page.tsx.
+const DURATION_RANGES: Record<string, { min: number; max: number }> = {
+  any: { min: 0, max: 999 },
+  short: { min: 2, max: 5 },
+  week: { min: 6, max: 8 },
+  long: { min: 9, max: 14 },
+  extended: { min: 15, max: 999 },
+};
+
 interface ParsedSearch {
   category: string;
   departurePort: string;
@@ -17,6 +28,9 @@ interface ParsedSearch {
   adults: number;
   children: number;
   infants: number;
+  duration: string;
+  departureStart: string;
+  departureEnd: string;
 }
 
 function parseSearch(params: URLSearchParams): ParsedSearch {
@@ -30,6 +44,7 @@ function parseSearch(params: URLSearchParams): ParsedSearch {
     const parsed = Number.parseInt(value ?? "", 10);
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
   };
+  const durationRaw = params.get("duration") ?? "any";
   return {
     category: params.get("category") ?? "",
     departurePort: params.get("departurePort") ?? "",
@@ -37,6 +52,9 @@ function parseSearch(params: URLSearchParams): ParsedSearch {
     adults: Math.max(1, parseInt10(params.get("adults"), 2)),
     children: parseInt10(params.get("children"), 0),
     infants: parseInt10(params.get("infants"), 0),
+    duration: DURATION_RANGES[durationRaw] ? durationRaw : "any",
+    departureStart: params.get("departureStart") ?? "",
+    departureEnd: params.get("departureEnd") ?? "",
   };
 }
 
@@ -110,12 +128,32 @@ const CruiseResultsInner = () => {
   }, [cruises]);
 
   const filteredCruises = useMemo(() => {
+    const durationRange = DURATION_RANGES[search.duration] ?? DURATION_RANGES.any;
+    const startMs = search.departureStart ? new Date(search.departureStart).getTime() : null;
+    const endMs = search.departureEnd ? new Date(search.departureEnd).getTime() : null;
+
     let list = cruises.filter((cruise) => {
+      // URL-level duration bucket first, then any per-page fine-tune.
+      if (cruise.duration < durationRange.min || cruise.duration > durationRange.max)
+        return false;
       if (durationFilter === "short" && cruise.duration > 5) return false;
       if (durationFilter === "medium" && (cruise.duration < 6 || cruise.duration > 9))
         return false;
       if (durationFilter === "long" && cruise.duration < 10) return false;
       if (selectedLine !== "all" && cruise.cruiseLine !== selectedLine) return false;
+
+      // Departure window: cruise must have at least one seeded departure
+      // date inside [start, end]. Missing bounds are treated as open.
+      if (startMs !== null || endMs !== null) {
+        const hasMatchingDate = cruise.departureDates?.some((iso) => {
+          const ms = new Date(iso).getTime();
+          if (Number.isNaN(ms)) return false;
+          if (startMs !== null && ms < startMs) return false;
+          if (endMs !== null && ms > endMs) return false;
+          return true;
+        });
+        if (!hasMatchingDate) return false;
+      }
       return true;
     });
     if (sortBy === "cheapest") {
@@ -130,7 +168,15 @@ const CruiseResultsInner = () => {
       list = [...list].sort((a, b) => b.rating - a.rating);
     }
     return list;
-  }, [cruises, durationFilter, selectedLine, sortBy]);
+  }, [
+    cruises,
+    durationFilter,
+    selectedLine,
+    sortBy,
+    search.duration,
+    search.departureStart,
+    search.departureEnd,
+  ]);
 
   const handleSelect = (cruise: Cruise) => {
     // Default to the first future departure date the cruise offers. If

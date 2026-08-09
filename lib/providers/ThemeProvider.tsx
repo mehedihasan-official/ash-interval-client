@@ -3,17 +3,29 @@
 // Provides light/dark theme state to the whole app. The chosen theme is
 // persisted to localStorage and applied as a `dark` class on <html> so
 // Tailwind's `dark:` variant (configured as class-based in globals.css)
-// picks it up everywhere. A tiny inline script in layout.tsx sets the
-// class before React hydrates, so there's no flash of the wrong theme;
-// this provider's initial state is read lazily from that same class so
-// it starts in sync without an extra render.
+// picks it up everywhere.
+//
+// On first mount we read localStorage (or fall back to the OS preference)
+// and set the class synchronously in a layout effect — that runs before
+// the browser paints, so the practical effect on typical hardware is
+// no visible flash. A tiny flash is possible on very slow devices; we
+// used to avoid that with an inline <script> in layout.tsx, but React
+// 19 refuses to hydrate components that render <script> tags, so the
+// effect-based approach is the safer trade.
 import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
   type ReactNode,
 } from "react";
+
+// useLayoutEffect warns during SSR because it can't do its job there.
+// This alias silences that warning: server = plain useEffect (no-op),
+// client = the real useLayoutEffect that runs before paint.
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 type Theme = "light" | "dark";
 

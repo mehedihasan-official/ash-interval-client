@@ -1,23 +1,33 @@
 "use client";
 
-// Cruises entry point. A member picks a destination (Caribbean, Alaska,
-// etc.), an optional departure port, party size, and preferred cabin.
-// The picks become query params on /cruises/results, which asks the
-// server for cruises pre-priced for that exact party.
+// Cruises entry point. Layout matches the Platinum Club cruise search
+// mockup: a "Going to" destination autocomplete (drawn from the
+// distinct set of destinations we've seeded), an optional "Departing
+// from" port autocomplete, a departure date window, and a duration
+// dropdown. Guest count + cabin type get set on the results page so
+// this widget stays minimal.
 import LocationAutocomplete from "@/components/shared/LocationAutocomplete";
 import { fetchCruiseMeta, searchCruisePorts } from "@/lib/api/cruises";
 import { useAuth } from "@/lib/providers/AuthProvider";
-import type { CabinKey, CruiseMeta } from "@/lib/types/cruise";
+import type { CruiseMeta } from "@/lib/types/cruise";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FaShip } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
+import { FaRegCalendarAlt, FaShip } from "react-icons/fa";
 
-const CABIN_OPTIONS: { value: CabinKey; label: string }[] = [
-  { value: "inside", label: "Inside" },
-  { value: "outside", label: "Ocean View" },
-  { value: "balcony", label: "Balcony" },
-  { value: "suite", label: "Suite" },
-];
+// Duration buckets a member typically thinks in — matches how the
+// major cruise-line search widgets segment inventory. Each option maps
+// to a min/max night range the results page can filter on.
+const DURATION_OPTIONS = [
+  { value: "any", label: "Any duration", min: 0, max: 999 },
+  { value: "short", label: "2–5 nights", min: 2, max: 5 },
+  { value: "week", label: "6–8 nights", min: 6, max: 8 },
+  { value: "long", label: "9–14 nights", min: 9, max: 14 },
+  { value: "extended", label: "15+ nights", min: 15, max: 999 },
+] as const;
+
+type DurationValue = (typeof DURATION_OPTIONS)[number]["value"];
+
+const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
 const CruisesSearchPage = () => {
   const router = useRouter();
@@ -28,18 +38,20 @@ const CruisesSearchPage = () => {
     departurePorts: [],
     cruiseLines: [],
   });
-  const [category, setCategory] = useState("");
+  const [destination, setDestination] = useState("");
   const [departurePort, setDeparturePort] = useState("");
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [cabinType, setCabinType] = useState<CabinKey>("inside");
+  const [departureStart, setDepartureStart] = useState("");
+  const [departureEnd, setDepartureEnd] = useState("");
+  const [duration, setDuration] = useState<DurationValue>("week");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/login");
   }, [authLoading, user, router]);
 
+  // Categories = destinations. Loaded once, filtered client-side by
+  // whatever the traveler types — the list is small (~10 items) so a
+  // dedicated server search isn't worth the round trip.
   useEffect(() => {
     let cancelled = false;
     fetchCruiseMeta()
@@ -47,108 +59,152 @@ const CruisesSearchPage = () => {
         if (!cancelled) setMeta(data);
       })
       .catch(() => {
-        /* meta is optional — dropdowns just stay empty if this fails */
+        /* meta is optional — dropdown just stays empty if this fails */
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
+  // Wraps the meta categories in a promise so it can plug into
+  // LocationAutocomplete's async search contract without needing a
+  // second, category-specific server endpoint.
+  const searchDestinations = useMemo(() => {
+    return async (query: string) => {
+      const trimmed = query.trim().toLowerCase();
+      const source = meta.categories;
+      const matches = trimmed
+        ? source.filter((entry) => entry.toLowerCase().includes(trimmed))
+        : source;
+      return matches.slice(0, 15).map((entry) => ({ destination: entry }));
+    };
+  }, [meta.categories]);
+
   const handleSearch = () => {
     setErrorMessage(null);
-    if (adults < 1) {
-      setErrorMessage("At least one adult guest is required.");
+    if (!destination.trim()) {
+      setErrorMessage("Please pick a destination from the list.");
       return;
     }
+    if (departureStart && departureEnd && new Date(departureEnd) < new Date(departureStart)) {
+      setErrorMessage("Departure window end must be after the start date.");
+      return;
+    }
+
     const params = new URLSearchParams({
-      cabinType,
-      adults: String(adults),
-      children: String(children),
-      infants: String(infants),
+      category: destination.trim(),
+      duration,
     });
-    if (category) params.set("category", category);
-    if (departurePort) params.set("departurePort", departurePort);
+    if (departurePort.trim()) params.set("departurePort", departurePort.trim());
+    if (departureStart) params.set("departureStart", departureStart);
+    if (departureEnd) params.set("departureEnd", departureEnd);
+
     router.push(`/cruises/results?${params.toString()}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f172a]">
-      <div className="bg-[#18294B] dark:bg-[#101b30] text-white py-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-2">
-            <FaShip className="text-white/80 w-6 h-6" />
-            <h1 className="text-3xl font-bold">Set Sail with Interval</h1>
-          </div>
-          <p className="text-white/70">
-            Compare cabin fares across every major cruise line — member
-            savings baked in.
+      <div className="bg-[#18294B] dark:bg-[#101b30] text-white py-8 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+            <FaShip className="w-6 h-6" /> Book Your Cruise
+          </h1>
+          <p className="text-sm sm:text-base text-white/70">
+            Book hotels, flights, cruises, and experiences while maximizing
+            the value of your vacation ownership.
           </p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white dark:bg-[#16223d] rounded-2xl shadow-sm border border-gray-200 dark:border-white/10 p-6 sm:p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                Destination
-              </label>
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a] text-gray-800 dark:text-white"
-              >
-                <option value="">All destinations</option>
-                {meta.categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="bg-white dark:bg-[#16223d] rounded-2xl shadow-sm border border-gray-200 dark:border-white/10 p-5 sm:p-6 space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            For expert cruise advice.
+          </p>
+
+          <LocationAutocomplete
+            label="Going to"
+            placeholder="Choose destination"
+            value={destination}
+            onChange={setDestination}
+            onSearch={searchDestinations}
+            onSelect={(value) => setDestination(value)}
+            getPrimaryLabel={(item) => item.destination}
+            getSelectedValue={(item) => item.destination}
+            getKey={(item) => item.destination}
+            suggestionsHeader="Showing available destinations"
+          />
+
+          <LocationAutocomplete
+            label="Departing from (optional)"
+            placeholder="Any port city"
+            value={departurePort}
+            onChange={setDeparturePort}
+            onSearch={(query) => searchCruisePorts(query, 10)}
+            onSelect={(value) => setDeparturePort(value)}
+            getPrimaryLabel={(item) => item.port}
+            getSelectedValue={(item) => item.port}
+            getKey={(item) => item.port}
+            suggestionsHeader="Showing available ports"
+          />
+
+          {/* "Departing between" — an inline start/end date window. Kept
+              collapsed as a labeled pill so the layout stays compact on
+              mobile, expanding to two date inputs side by side. */}
+          <div className="rounded-xl border border-gray-200 dark:border-white/10 px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <FaRegCalendarAlt className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <div className="text-sm font-bold text-gray-800 dark:text-white">
+                Departing between
+              </div>
             </div>
-            <LocationAutocomplete
-              label="Departure Port"
-              placeholder="Type a city or port (e.g. Miami)"
-              value={departurePort}
-              onChange={setDeparturePort}
-              onSearch={(query) => searchCruisePorts(query, 10)}
-              onSelect={(value) => setDeparturePort(value)}
-              getPrimaryLabel={(item) => item.port}
-              getSelectedValue={(item) => item.port}
-              getKey={(item) => item.port}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="date"
+                value={departureStart}
+                min={todayIsoDate()}
+                onChange={(event) => setDepartureStart(event.target.value)}
+                className="w-full bg-transparent text-sm text-gray-700 dark:text-gray-200 focus:outline-none border-b border-gray-200 dark:border-white/10 pb-1"
+                aria-label="Departure window start"
+              />
+              <input
+                type="date"
+                value={departureEnd}
+                min={departureStart || todayIsoDate()}
+                onChange={(event) => setDepartureEnd(event.target.value)}
+                className="w-full bg-transparent text-sm text-gray-700 dark:text-gray-200 focus:outline-none border-b border-gray-200 dark:border-white/10 pb-1"
+                aria-label="Departure window end"
+              />
+            </div>
+            {!departureStart && !departureEnd && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Select date window
+              </p>
+            )}
           </div>
 
-          <div className="mb-6">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-              Preferred Cabin
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {CABIN_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setCabinType(option.value)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                    cabinType === option.value
-                      ? "bg-[#0077be] text-white"
-                      : "bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/10"
-                  }`}
-                >
+          <div className="rounded-xl border border-gray-200 dark:border-white/10 px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <FaShip className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <div className="text-sm font-bold text-gray-800 dark:text-white">
+                Duration
+              </div>
+            </div>
+            <select
+              value={duration}
+              onChange={(event) => setDuration(event.target.value as DurationValue)}
+              className="w-full bg-transparent text-sm text-gray-700 dark:text-gray-200 focus:outline-none"
+            >
+              {DURATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
                   {option.label}
-                </button>
+                </option>
               ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <GuestCounter label="Adults (18+)" value={adults} min={1} max={8} onChange={setAdults} />
-            <GuestCounter label="Children (2-17)" value={children} min={0} max={8} onChange={setChildren} />
-            <GuestCounter label="Infants (under 2)" value={infants} min={0} max={4} onChange={setInfants} />
+            </select>
           </div>
 
           {errorMessage && (
-            <div className="mb-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm">
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm">
               {errorMessage}
             </div>
           )}
@@ -156,47 +212,14 @@ const CruisesSearchPage = () => {
           <button
             type="button"
             onClick={handleSearch}
-            className="w-full bg-[#0077be] hover:bg-[#005a8e] text-white font-bold py-4 rounded-lg text-lg transition"
+            className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold py-3 rounded-full text-base transition"
           >
-            Search Cruises
+            Search
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-interface GuestCounterProps {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  onChange: (value: number) => void;
-}
-
-const GuestCounter = ({ label, value, min, max, onChange }: GuestCounterProps) => (
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-      {label}
-    </label>
-    <div className="flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a]">
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(min, value - 1))}
-        className="w-8 h-8 rounded border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-200"
-      >
-        -
-      </button>
-      <span className="text-gray-800 dark:text-white font-semibold">{value}</span>
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(max, value + 1))}
-        className="w-8 h-8 rounded border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-200"
-      >
-        +
-      </button>
-    </div>
-  </div>
-);
 
 export default CruisesSearchPage;

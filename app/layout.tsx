@@ -6,25 +6,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/shared/Header";
 
-// Runs before React hydrates so the correct theme class is on <html>
-// from the very first paint — this is what prevents a flash of the
-// wrong (light/dark) theme on page load.
-const themeInitScript = `
-  (function () {
-    try {
-      var stored = window.localStorage.getItem("interval-theme");
-      var theme =
-        stored === "light" || stored === "dark"
-          ? stored
-          : window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-      var root = document.documentElement;
-      if (theme === "dark") root.classList.add("dark");
-      root.style.colorScheme = theme;
-    } catch (e) {}
-  })();
-`;
+// We used to inject a `<script>` here to set the theme class before
+// hydration, but React 19 bails out of hydration when a component
+// renders a raw <script> tag (even with the type-swap workaround the
+// Next docs recommend). We now handle the initial theme entirely in
+// ThemeProvider's effect — dark-mode users see a very brief light
+// flash on first load, which is a fine trade for a clean hydration
+// with no fragile workarounds.
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,9 +43,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body
         className="min-h-full flex flex-col bg-white dark:bg-[#0f172a] text-[#1a1a1a] dark:text-[#f1f5f9] transition-colors"
         suppressHydrationWarning

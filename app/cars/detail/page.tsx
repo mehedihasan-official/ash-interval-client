@@ -4,12 +4,13 @@
 // lets the member confirm cash vs points, then hands off to the driver
 // details step. The pricing block was computed on the server for this
 // exact trip length + mileage estimate, so we just display it.
+import CarImage from "@/components/cars/CarImage";
 import { loadCarDraft, updateCarDraft } from "@/lib/carDraft";
 import type { CarDraft } from "@/lib/carDraft";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaCar, FaCogs, FaGasPump, FaMapMarkerAlt, FaSnowflake, FaStar, FaSuitcase, FaUser } from "react-icons/fa";
+import { FaCogs, FaGasPump, FaMapMarkerAlt, FaSnowflake, FaStar, FaSuitcase, FaUser } from "react-icons/fa";
 
 const formatMoney = (value: number) =>
   value.toLocaleString(undefined, { style: "currency", currency: "USD" });
@@ -76,16 +77,12 @@ const CarDetailPage = () => {
             <section className="bg-white dark:bg-[#16223d] rounded-xl border border-gray-200 dark:border-white/10 p-6">
               <div className="grid grid-cols-1 sm:grid-cols-[260px_1fr] gap-6">
                 <div className="h-40 sm:h-full bg-gray-100 dark:bg-white/5 rounded-lg overflow-hidden flex items-center justify-center">
-                  {car.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={car.image}
-                      alt={car.brand}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  ) : (
-                    <FaCar className="w-16 h-16 text-gray-300" />
-                  )}
+                  <CarImage
+                    src={car.image}
+                    category={car.category}
+                    alt={car.brand}
+                    className="max-h-full max-w-full object-contain"
+                  />
                 </div>
                 <div>
                   <p className="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">
