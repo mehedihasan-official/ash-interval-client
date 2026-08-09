@@ -4,10 +4,23 @@
 // plus an estimated daily mileage — the mileage estimate matters
 // because non-unlimited plans charge for miles over the daily
 // allowance, so pre-computing the true total needs both pieces.
+//
+// Pickup/dropoff locations are surfaced via a suggestion input backed
+// by the airports collection (real-world rental depots are almost
+// always at airports), matching the flight search UX.
+import LocationAutocomplete from "@/components/shared/LocationAutocomplete";
+import { searchAirports } from "@/lib/api/flights";
 import { useAuth } from "@/lib/providers/AuthProvider";
+import type { Airport } from "@/lib/types/flight";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaCar } from "react-icons/fa";
+
+// Formats an airport row into the pickup-location label we store —
+// "MCO — Orlando" is compact enough for the results header but still
+// tells the member exactly which city they picked.
+const formatAirportLabel = (airport: Airport) =>
+  `${airport.code} — ${airport.city}`;
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
@@ -93,31 +106,31 @@ const CarsSearchPage = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white dark:bg-[#16223d] rounded-2xl shadow-sm border border-gray-200 dark:border-white/10 p-6 sm:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                Pickup Location
-              </label>
-              <input
-                type="text"
-                placeholder="City, airport, or address"
-                value={pickupLocation}
-                onChange={(event) => setPickupLocation(event.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a] text-gray-800 dark:text-white focus:outline-none focus:border-[#0077be]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                Dropoff Location
-              </label>
-              <input
-                type="text"
-                placeholder="City, airport, or address"
-                value={dropoffLocation}
-                onChange={(event) => setDropoffLocation(event.target.value)}
-                disabled={sameLocation}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a] text-gray-800 dark:text-white focus:outline-none focus:border-[#0077be] disabled:opacity-60"
-              />
-            </div>
+            <LocationAutocomplete
+              label="Pickup Location"
+              placeholder="Airport code or city"
+              value={pickupLocation}
+              onChange={setPickupLocation}
+              onSearch={(query) => searchAirports(query, 8)}
+              onSelect={(value) => setPickupLocation(value)}
+              getPrimaryLabel={formatAirportLabel}
+              getSecondaryLabel={(airport) => airport.name}
+              getSelectedValue={formatAirportLabel}
+              getKey={(airport) => airport.code}
+            />
+            <LocationAutocomplete
+              label="Dropoff Location"
+              placeholder="Airport code or city"
+              value={dropoffLocation}
+              disabled={sameLocation}
+              onChange={setDropoffLocation}
+              onSearch={(query) => searchAirports(query, 8)}
+              onSelect={(value) => setDropoffLocation(value)}
+              getPrimaryLabel={formatAirportLabel}
+              getSecondaryLabel={(airport) => airport.name}
+              getSelectedValue={formatAirportLabel}
+              getKey={(airport) => airport.code}
+            />
           </div>
 
           <label className="flex items-center gap-2 mb-6 text-sm text-gray-700 dark:text-gray-200">

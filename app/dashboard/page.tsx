@@ -197,20 +197,23 @@ const DashboardPage = () => {
                 &rarr;
               </span>
             </Link>
-            <div
-              className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center gap-4 opacity-70 cursor-not-allowed"
-              aria-disabled
+            <Link
+              href="/cruises"
+              className="group bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-5 flex items-center gap-4 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
             >
-              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-                <FaShip className="text-gray-400 w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-[#0077be]/10 dark:bg-white/10 flex items-center justify-center">
+                <FaShip className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
               </div>
               <div className="flex-1">
                 <p className="font-bold text-gray-800 dark:text-white">Cruises</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Coming soon
+                  Member savings on cabins
                 </p>
               </div>
-            </div>
+              <span className="text-xs font-bold text-[#0077be] dark:text-[#7fb8e6] group-hover:translate-x-1 transition-transform">
+                &rarr;
+              </span>
+            </Link>
           </div>
         </div>
 

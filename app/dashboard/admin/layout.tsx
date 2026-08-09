@@ -58,7 +58,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Link href="/dashboard" className="text-2xl font-bold tracking-tight">
             Interval
           </Link>
-          <p className="text-xs text-blue-300 mt-1 uppercase tracking-widest">Admin Panel</p>
+          <p className="text-xs text-blue-300 mt-1 uppercase tracking-widest">Owner Details</p>
         </div>
         <nav className="flex-1 py-6 px-4 space-y-1">
           {adminLinks.map((link) => {
@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         >
           <FaBars className="w-5 h-5" />
         </button>
-        <span className="font-bold">Admin Panel</span>
+        <span className="font-bold">Owner Details</span>
         <button
           onClick={handleLogout}
           className="text-xs font-bold bg-red-500 px-3 py-1.5 rounded hover:bg-red-600 transition"
@@ -121,7 +121,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       >
         <div className="bg-[#18294B] dark:bg-[#101b30] p-5 flex justify-between items-center text-white">
           <div>
-            <span className="text-lg font-bold">Admin Panel</span>
+            <span className="text-lg font-bold">Owner Details</span>
             <p className="text-xs text-blue-300 uppercase tracking-wide">Interval</p>
           </div>
           <button onClick={() => setIsMenuOpen(false)} aria-label="Close admin menu">
