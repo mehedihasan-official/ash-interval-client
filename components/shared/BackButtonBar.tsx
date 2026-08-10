@@ -60,6 +60,9 @@ export default function BackButtonBar() {
     setCanGoBack(typeof window !== "undefined" && window.history.length > 1);
   }, [pathname]);
 
+  // Admin section has its own layout + navigation, so skip the
+  // site-wide chrome entirely (matches the same guard in Header).
+  if (pathname.startsWith("/dashboard/admin")) return null;
   if (HIDDEN_PATHS.has(pathname)) return null;
 
   const handleBack = () => {

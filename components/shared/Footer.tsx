@@ -1,5 +1,14 @@
-// Site footer with legal/info links. Static content — no auth logic needed.
+"use client";
+
+// Site footer with legal/info links. Client-side so it can inspect the
+// current pathname and stay hidden inside /dashboard/admin/*, where the
+// admin layout provides its own chrome.
+import { usePathname } from "next/navigation";
+
 const Footer = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/dashboard/admin")) return null;
+
   return (
     <footer className="bg-white dark:bg-[#0f172a] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-white/10">
       {/* Desktop footer */}

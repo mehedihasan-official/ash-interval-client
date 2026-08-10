@@ -14,10 +14,9 @@ import {
   type WalletSummary,
 } from "@/lib/api/wallet";
 import { useAuth } from "@/lib/providers/AuthProvider";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { FaArrowLeft, FaCoins, FaExchangeAlt, FaWallet } from "react-icons/fa";
+import { FaCoins, FaExchangeAlt, FaWallet } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 const formatUsd = (value: number) =>
@@ -131,13 +130,6 @@ const PointsConversionPage = () => {
   return (
     <div className="min-h-[70vh] bg-gray-50 dark:bg-[#0f172a] px-4 sm:px-6 py-8">
       <div className="max-w-2xl mx-auto">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-[#1a6fa8] dark:text-[#7fb8e6] hover:underline font-medium mb-6"
-        >
-          <FaArrowLeft className="w-3 h-3" /> Back to Dashboard
-        </Link>
-
         <h1 className="text-2xl font-bold text-[#0077be] mb-1">Convert Points to Cash</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Exchange your Interval points for cash in your wallet. A 30% commission fee applies to

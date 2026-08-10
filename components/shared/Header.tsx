@@ -48,6 +48,11 @@ const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
 
+  // /dashboard/admin/* has its own dedicated shell (sidebar + hamburger
+  // in app/dashboard/admin/layout.tsx). Rendering this header on top
+  // would give the admin two hamburgers stacked over each other.
+  if (pathname?.startsWith("/dashboard/admin")) return null;
+
   const closeMenu = () => setIsMenuOpen(false);
 
   const handleLogout = async () => {
