@@ -1,3 +1,4 @@
+import BackButtonBar from "@/components/shared/BackButtonBar";
 import Footer from "@/components/shared/Footer";
 import { AuthProvider } from "@/lib/providers/AuthProvider";
 import { ThemeProvider } from "@/lib/providers/ThemeProvider";
@@ -53,6 +54,11 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <Header />
+            {/* Site-wide back button — hides itself on home/dashboard/
+                auth pages, renders on every inner page (booking flows,
+                admin sub-pages, resort detail, etc.). Placed here
+                instead of per-page so future pages get it for free. */}
+            <BackButtonBar />
             <main className="grow">{children}</main>
             <Footer />
           </AuthProvider>

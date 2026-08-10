@@ -45,26 +45,36 @@ const applyThemeClass = (theme: Theme) => {
   root.style.colorScheme = theme;
 };
 
-// Lazily determine the starting theme. On the server this just returns
-// "light" (arbitrary, never shown — the inline script fixes the class
-// before paint); on the client it reads the class the inline script
-// already applied, so this component never needs to "correct" itself
-// with a setState-in-effect after mount.
-const getInitialTheme = (): Theme => {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+// Resolves the theme the user actually wants: their stored choice if
+// present, else their OS preference, else light as a safe default.
+// Called from a layout effect after mount so it only ever runs on the
+// client — server always renders `light` for consistency, and the
+// class flips to `dark` before the browser paints when needed.
+const resolveClientTheme = (): Theme => {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // localStorage can throw (Safari private mode, disabled cookies).
+    // Falling through to the OS preference is the right default.
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  // Lazy initializer reads the class the inline script already applied,
-  // so `theme` is correct from the first render — no useEffect needed to
-  // "correct" it after mount, which avoids an extra synchronous render.
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  // Always start in "light" so the server and client agree on the
+  // initial render — no hydration mismatch. The layout effect below
+  // immediately corrects it before the browser paints anything the
+  // user can see.
+  const [theme, setThemeState] = useState<Theme>("light");
 
-  useEffect(() => {
-    applyThemeClass(theme);
-    // Only needs to run once, to sync the class for the initial theme —
-    // setTheme() below already re-applies it on every later change.
+  useIsomorphicLayoutEffect(() => {
+    const resolved = resolveClientTheme();
+    setThemeState(resolved);
+    applyThemeClass(resolved);
+    // Runs once on mount — later theme changes flow through setTheme.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
