@@ -11,10 +11,15 @@ import { useAuth } from "@/lib/providers/AuthProvider";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { FaBars, FaHotel, FaPlus, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
+import { FaBars, FaHome, FaHotel, FaPlus, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
 
+// The first entry sends the admin back to the members-facing
+// dashboard so they can jump out of the admin shell without having
+// to sign out. Keeping it at the top of the list because it's the
+// most common escape hatch during day-to-day admin work.
 const adminLinks = [
-  { name: "Overview", href: "/dashboard/admin", icon: FaTachometerAlt },
+  { name: "Member Dashboard", href: "/dashboard", icon: FaHome },
+  { name: "Admin Overview", href: "/dashboard/admin", icon: FaTachometerAlt },
   { name: "Registered Users", href: "/dashboard/admin/users", icon: FaUsers },
   { name: "Resorts", href: "/dashboard/admin/resorts", icon: FaHotel },
   { name: "Add Resort", href: "/dashboard/admin/resorts/new", icon: FaPlus },
@@ -98,7 +103,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         >
           <FaBars className="w-5 h-5" />
         </button>
-        <span className="font-bold">Owner Details</span>
+
+        {/* Logo doubles as a shortcut back to the members dashboard —
+            common pattern so an admin can jump out of the admin shell
+            with a single tap. */}
+        <Link href="/dashboard" className="flex items-baseline gap-1.5" aria-label="Go to member dashboard">
+          <span className="text-lg font-bold lowercase tracking-tight">interval</span>
+          <span className="text-[10px] text-blue-300 font-semibold uppercase tracking-wide">
+            Admin
+          </span>
+        </Link>
+
         <button
           onClick={handleLogout}
           className="text-xs font-bold bg-red-500 px-3 py-1.5 rounded hover:bg-red-600 transition"
