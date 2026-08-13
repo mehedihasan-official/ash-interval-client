@@ -75,7 +75,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setThemeState(resolved);
     applyThemeClass(resolved);
     // Runs once on mount — later theme changes flow through setTheme.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setTheme = (next: Theme) => {

@@ -14,7 +14,7 @@ import { useAuth } from "@/lib/providers/AuthProvider";
 import type { Airport } from "@/lib/types/flight";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaCar, FaMapMarkerAlt, FaRegClock } from "react-icons/fa";
+import { FaCar, FaRegClock } from "react-icons/fa";
 
 // "MCO — Orlando" is what we store back in the input. Compact enough
 // for the results header but still tells the member exactly which city
