@@ -64,7 +64,16 @@ const ExchangePage = () => {
                 <button
                   key={tab}
                   type="button"
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    // Cruise Exchange lives on its own dedicated search
+                    // page — jump there instead of trying to render a
+                    // placeholder inside the exchange shell.
+                    if (tab === "Cruise Exchange") {
+                      router.push("/cruises");
+                      return;
+                    }
+                    setActiveTab(tab);
+                  }}
                   className={`py-3 px-4 text-sm font-medium text-center flex-shrink-0 border-b-2 transition-colors ${
                     activeTab === tab
                       ? "text-[#0077be] border-[#0077be]"

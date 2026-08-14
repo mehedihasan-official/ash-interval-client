@@ -124,7 +124,7 @@ const CruisesSearchPage = () => {
 
           <LocationAutocomplete
             label="Going to"
-            placeholder="Choose destination"
+            placeholder="Tap to choose a destination"
             value={destination}
             onChange={setDestination}
             onSearch={searchDestinations}
@@ -133,6 +133,7 @@ const CruisesSearchPage = () => {
             getSelectedValue={(item) => item.destination}
             getKey={(item) => item.destination}
             suggestionsHeader="Showing available destinations"
+            openOnFocus
           />
 
           <LocationAutocomplete
