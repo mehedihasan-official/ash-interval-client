@@ -9,6 +9,7 @@
 import BookingSteps from "@/components/resorts/BookingSteps";
 import ResortImage from "@/components/resorts/ResortImage";
 import { clearBookingDraft, loadBookingDraft, saveBookingDraft } from "@/lib/bookingDraft";
+import { formatIsoDate } from "@/lib/dateFormat";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import {
   CASH_TAXES_AND_FEES,
@@ -148,11 +149,11 @@ const CheckoutPage = () => {
                 </p>
                 <p>
                   <span className="font-semibold">Check-in:</span>{" "}
-                  {new Date(search.earliestDate).toLocaleDateString()}
+                  {formatIsoDate(search.earliestDate)}
                 </p>
                 <p>
                   <span className="font-semibold">Check-out:</span>{" "}
-                  {new Date(search.latestDate).toLocaleDateString()}
+                  {formatIsoDate(search.latestDate)}
                 </p>
               </div>
             </div>

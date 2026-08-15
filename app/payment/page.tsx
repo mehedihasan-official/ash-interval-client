@@ -7,6 +7,7 @@
 import BookingSteps from "@/components/resorts/BookingSteps";
 import { createBooking } from "@/lib/api/bookings";
 import { loadBookingDraft, saveBookingDraft } from "@/lib/bookingDraft";
+import { formatIsoDate } from "@/lib/dateFormat";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import { getCashTotalWithTax, type BillingInfo, type BookingDraft } from "@/lib/types/booking";
 import { getResortName } from "@/lib/types/resort";
@@ -168,8 +169,8 @@ const PaymentPage = () => {
             </p>
             <p>
               <span className="font-semibold">Dates:</span>{" "}
-              {new Date(search.earliestDate).toLocaleDateString()} &rarr;{" "}
-              {new Date(search.latestDate).toLocaleDateString()} ({nights} nights)
+              {formatIsoDate(search.earliestDate)} &rarr;{" "}
+              {formatIsoDate(search.latestDate)} ({nights} nights)
             </p>
             {isPoints ? (
               <p>

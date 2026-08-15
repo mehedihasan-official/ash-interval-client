@@ -1,6 +1,7 @@
 "use client";
 
 import { saveBookingDraft } from "@/lib/bookingDraft";
+import { formatIsoDate } from "@/lib/dateFormat";
 import {
   CASH_PRICE_PER_NIGHT,
   getCashTotal,
@@ -61,12 +62,12 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
     router.push("/checkout");
   };
 
-  const formattedCheckIn = new Date(search.earliestDate).toLocaleDateString(undefined, {
+  const formattedCheckIn = formatIsoDate(search.earliestDate, {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-  const formattedCheckOut = new Date(search.latestDate).toLocaleDateString(undefined, {
+  const formattedCheckOut = formatIsoDate(search.latestDate, {
     month: "short",
     day: "numeric",
     year: "numeric",

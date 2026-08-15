@@ -3,6 +3,7 @@
 import ResortImage from "@/components/resorts/ResortImage";
 import BookingSteps from "@/components/resorts/BookingSteps";
 import { clearBookingDraft, loadBookingDraft } from "@/lib/bookingDraft";
+import { formatIsoDate } from "@/lib/dateFormat";
 import { getCashTotalWithTax, type BookingDraft } from "@/lib/types/booking";
 import { getResortName } from "@/lib/types/resort";
 import Link from "next/link";
@@ -110,11 +111,11 @@ const ConfirmationContent = () => {
                 </p>
                 <p>
                   <span className="font-semibold">Check-in:</span>{" "}
-                  {new Date(search.earliestDate).toLocaleDateString()}
+                  {formatIsoDate(search.earliestDate)}
                 </p>
                 <p>
                   <span className="font-semibold">Check-out:</span>{" "}
-                  {new Date(search.latestDate).toLocaleDateString()}
+                  {formatIsoDate(search.latestDate)}
                 </p>
                 <p>
                   <span className="font-semibold">Nights:</span> {nights}

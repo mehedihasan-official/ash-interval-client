@@ -37,6 +37,18 @@ const SearchResultsContent = () => {
   const start = (page - 1) * RESULTS_PER_PAGE;
   const pageResults = results.slice(start, start + RESULTS_PER_PAGE);
 
+  // Wraps page changes so the viewport jumps back to the top of the
+  // results — otherwise the browser keeps its scroll position and the
+  // new page renders below the fold, making it look like nothing
+  // changed on mobile.
+  const goToPage = (next: number) => {
+    const clamped = Math.min(Math.max(1, next), totalPages);
+    setCurrentPage(clamped);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10">
@@ -88,7 +100,7 @@ const SearchResultsContent = () => {
               <nav className="flex flex-wrap justify-center items-center gap-2 max-w-full">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => goToPage(page - 1)}
                   disabled={page === 1}
                   className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base transition-colors ${
                     page === 1
@@ -104,7 +116,7 @@ const SearchResultsContent = () => {
                     <button
                       key={index + 1}
                       type="button"
-                      onClick={() => setCurrentPage(index + 1)}
+                      onClick={() => goToPage(index + 1)}
                       className={`px-4 py-2 rounded-md transition-colors ${
                         page === index + 1
                           ? "bg-[#0077be] text-white shadow-md"
@@ -122,7 +134,7 @@ const SearchResultsContent = () => {
 
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => goToPage(page + 1)}
                   disabled={page === totalPages}
                   className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base transition-colors ${
                     page === totalPages
