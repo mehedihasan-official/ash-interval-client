@@ -189,12 +189,24 @@ export const resortMatchesLocation = (
  * Every distinct, non-empty country across the given resorts, sorted
  * alphabetically. Used by the top-level Resort Directory page to build
  * the "choose a country" grid from the full dataset.
+ *
+ * Resorts whose `country` field is a placeholder like "Unknown" (case-
+ * insensitive) are hidden from the grid — routing to
+ * `/resort-directory/region/Unknown` isn't a useful destination for a
+ * member, so we don't advertise it as a browseable country. The resort
+ * documents themselves stay in the database, they're just not surfaced
+ * as a country choice.
  */
+const PLACEHOLDER_COUNTRY_NAMES = new Set(["unknown", "n/a", "none", "null"]);
+
+const isPlaceholderCountry = (country: string): boolean =>
+  PLACEHOLDER_COUNTRY_NAMES.has(country.trim().toLowerCase());
+
 export const getUniqueCountries = (resorts: Resort[]): string[] => {
   const countries = new Set<string>();
   for (const resort of resorts) {
     const country = getResortCountry(resort);
-    if (country) countries.add(country);
+    if (country && !isPlaceholderCountry(country)) countries.add(country);
   }
   return Array.from(countries).sort((a, b) => a.localeCompare(b));
 };
