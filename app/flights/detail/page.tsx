@@ -205,7 +205,7 @@ const FlightDetailPage = () => {
                 <PaymentOption
                   active={paymentMethod === "points"}
                   onSelect={() => setPaymentMethod("points")}
-                  title="Pay with Sky Miles Points"
+                  title="Pay with Points"
                   subtitle="Interval Rewards"
                   amount={`${formatPoints(pricing.totalPoints)} points total`}
                   detail={

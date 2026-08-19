@@ -225,7 +225,7 @@ const ConfirmationInner = () => {
               <span className="font-semibold">
                 {booking.paymentMethod === "cash"
                   ? "Credit / Debit Card"
-                  : "Sky Miles Points"}
+                  : "Points"}
               </span>
             </div>
             <div className="flex justify-between text-gray-700 dark:text-gray-200">
