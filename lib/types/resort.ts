@@ -212,6 +212,18 @@ export const getUniqueCountries = (resorts: Resort[]): string[] => {
 };
 
 /**
+ * Region names that landed in the region field of some resort docs
+ * but are really hotel/property names — they'd render as a "region"
+ * tile on the country page that leads to a single-resort dead end.
+ * Filtered from the region grid; the underlying resort documents
+ * stay in the database.
+ */
+const BLOCKED_REGION_NAMES = new Set(["24 north hotel"]);
+
+const isBlockedRegion = (region: string): boolean =>
+  BLOCKED_REGION_NAMES.has(region.trim().toLowerCase());
+
+/**
  * Every distinct, non-empty region for resorts within one country,
  * sorted alphabetically. Used by the country page to decide whether to
  * show a region-picker step or go straight to resort cards.
@@ -231,7 +243,9 @@ export const getUniqueRegionsForCountry = (
       continue;
     }
 
-    for (const region of getResortRegions(resort)) regions.add(region);
+    for (const region of getResortRegions(resort)) {
+      if (!isBlockedRegion(region)) regions.add(region);
+    }
   }
   return Array.from(regions).sort((a, b) => a.localeCompare(b));
 };
