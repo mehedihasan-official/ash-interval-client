@@ -1,10 +1,11 @@
 "use client";
 
-// Gateways — lets a member search discounted "getaway" stays. Mirrors the
-// reference site: hero banner, a Getaways / ShortStay Getaways pill
-// toggle, and (for Getaways) the shared destination-search sub-tabs.
-// ShortStay Getaways has no search form in the reference design, so it
-// just shows an informational placeholder.
+// Gateways — lets a member search discounted "getaway" stays. Mirrors
+// the reference site: hero banner, a horizontally-scrollable row of
+// getaway-type tabs (parallel to the ones on /dashboard/exchange), and
+// (for Vacation Getaways) the shared destination-search sub-tabs. The
+// other three tabs are placeholders for now — Cruise Getaways routes
+// straight over to /cruises like Cruise Exchange does.
 import Loading from "@/components/resorts/Loading";
 import ResortLoadError from "@/components/resorts/ResortLoadError";
 import DestinationSearchTabs from "@/components/search/DestinationSearchTabs";
@@ -17,7 +18,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoIosArrowForward } from "react-icons/io";
 
-const tabs = ["Getaways", "ShortStay Getaways"] as const;
+const tabs = [
+  "Vacation Getaways",
+  "Cruise Getaways",
+  "ShortStay Getaways",
+  "Hotel Getaways",
+] as const;
 type Tab = (typeof tabs)[number];
 
 const quickLinks = [
@@ -29,7 +35,7 @@ const GatewaysPage = () => {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { loading, error, reload } = useResortData();
-  const [activeTab, setActiveTab] = useState<Tab>("Getaways");
+  const [activeTab, setActiveTab] = useState<Tab>("Vacation Getaways");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -64,24 +70,42 @@ const GatewaysPage = () => {
           </p>
         </div>
 
-        <div className="flex flex-row items-center justify-center mt-6 px-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 text-xs sm:text-sm font-bold border-2 py-3 transition-all ${
-                activeTab === tab
-                  ? "bg-[#0077be] text-white border-[#0077be]"
-                  : "bg-white dark:bg-[#16223d] text-[#0077be] dark:text-[#7fb8e6] border-[#0077be] hover:bg-blue-50 dark:hover:bg-white/10"
-              } ${tab === "Getaways" ? "rounded-s-md" : "rounded-e-md"}`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="mt-6 w-full">
+          <div className="overflow-x-auto border-b border-gray-300 dark:border-white/10 pb-0.5">
+            <div className="flex min-w-max">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => {
+                    // Cruise Getaways shares the same dedicated cruise
+                    // search page Cruise Exchange uses — jump there
+                    // instead of rendering a placeholder inside the
+                    // gateways shell.
+                    if (tab === "Cruise Getaways") {
+                      router.push("/cruises");
+                      return;
+                    }
+                    setActiveTab(tab);
+                  }}
+                  className={`py-3 px-4 text-sm font-medium text-center flex-shrink-0 border-b-2 transition-colors ${
+                    activeTab === tab
+                      ? "text-[#0077be] border-[#0077be]"
+                      : "text-gray-700 dark:text-gray-200 border-transparent hover:text-[#0077be]"
+                  }`}
+                >
+                  {tab.split(" ").map((word) => (
+                    <span key={word} className="block">
+                      {word}
+                    </span>
+                  ))}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {activeTab === "Getaways" ? (
+        {activeTab === "Vacation Getaways" ? (
           loading ? (
             <div className="mt-8">
               <Loading />
@@ -91,13 +115,13 @@ const GatewaysPage = () => {
               <ResortLoadError message={error} onRetry={reload} />
             </div>
           ) : (
-            <div className="px-2">
+            <div className="px-2 mt-4">
               <DestinationSearchTabs />
             </div>
           )
         ) : (
           <div className="mt-8 px-2 text-center py-12 bg-white dark:bg-[#16223d] border border-dashed border-gray-300 dark:border-white/10 rounded-lg text-gray-600 dark:text-gray-300">
-            ShortStay Getaways deals will appear here.
+            {activeTab} deals will appear here.
           </div>
         )}
 
