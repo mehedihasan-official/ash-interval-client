@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/providers/AuthProvider";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { FaBars, FaHome, FaHotel, FaPlus, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
+import { FaBars, FaHome, FaHotel, FaPlus, FaShip, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
 
 // The first entry sends the admin back to the members-facing
 // dashboard so they can jump out of the admin shell without having
@@ -23,6 +23,8 @@ const adminLinks = [
   { name: "Registered Users", href: "/dashboard/admin/users", icon: FaUsers },
   { name: "Resorts", href: "/dashboard/admin/resorts", icon: FaHotel },
   { name: "Add Resort", href: "/dashboard/admin/resorts/new", icon: FaPlus },
+  { name: "Cruises", href: "/dashboard/admin/cruises", icon: FaShip },
+  { name: "Add Cruise", href: "/dashboard/admin/cruises/new", icon: FaPlus },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

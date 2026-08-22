@@ -5,6 +5,7 @@
 // backend routes/schema these calls expect — that server code lives in the
 // separate interval-ash-server repo, not in this frontend project.
 import firebaseApp, { isFirebaseConfigured } from "@/lib/firebase/firebase.config";
+import type { CabinKey, Cruise } from "@/lib/types/cruise";
 import type { ApiResponse, Resort } from "@/lib/types/resort";
 import { getAuth } from "firebase/auth";
 
@@ -149,6 +150,55 @@ export async function updateResort(
   input: UpdateResortInput,
 ): Promise<Resort> {
   return apiFetch<Resort>(`/resorts/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+// Fields the admin cruise-input form collects. Mirrors the Cruise
+// schema on the backend (interval-ash-server/src/models/cruise.model.ts)
+// so a cruise created here renders correctly across search, detail,
+// and the booking flow without any extra mapping.
+export interface CruiseCabinInput {
+  name: string;
+  retailPrice: number;
+}
+
+export interface CreateCruiseInput {
+  cruiseId: string;
+  name: string;
+  cruiseLine: string;
+  cruiseLineLogo?: string;
+  route: string;
+  departurePort: string;
+  duration: number;
+  category: string;
+  image?: string;
+  rating: number;
+  reviews: number;
+  itinerary: string[];
+  shipFeatures: string[];
+  cabinTypes: Record<CabinKey, CruiseCabinInput>;
+  departureDates: string[];
+  includes: string[];
+}
+
+export type UpdateCruiseInput = Partial<CreateCruiseInput>;
+
+/** Creates a new cruise listing. Admin-only on the backend. */
+export async function createCruise(input: CreateCruiseInput): Promise<Cruise> {
+  return apiFetch<Cruise>("/cruises", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+/** Updates an existing cruise by id. Admin-only on the backend. */
+export async function updateCruise(
+  id: string,
+  input: UpdateCruiseInput,
+): Promise<Cruise> {
+  return apiFetch<Cruise>(`/cruises/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: JSON.stringify(input),
   });

@@ -287,6 +287,15 @@ const DashboardPage = () => {
               My Account
             </span>
           </Link>
+          <Link
+            href="/dashboard/all-cruises"
+            className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
+          >
+            <FaShip className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+              All Cruises
+            </span>
+          </Link>
           <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2">
             <FaCalendarAlt className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
             <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
