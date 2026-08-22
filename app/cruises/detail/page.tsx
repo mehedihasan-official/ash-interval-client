@@ -129,7 +129,10 @@ const CruiseDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <section className="bg-white dark:bg-[#16223d] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
-              <div className="h-64 bg-gray-100 dark:bg-white/5">
+              {/* Ship photo shown at its natural aspect ratio so the
+                  full frame is visible on mobile and desktop instead of
+                  being centre-cropped inside a fixed-height box. */}
+              <div className="bg-gray-100 dark:bg-white/5">
                 {cruise.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -138,10 +141,10 @@ const CruiseDetailPage = () => {
                     onError={(event) => {
                       event.currentTarget.style.display = "none";
                     }}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto block"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-64 flex items-center justify-center">
                     <FaShip className="w-16 h-16 text-gray-300" />
                   </div>
                 )}

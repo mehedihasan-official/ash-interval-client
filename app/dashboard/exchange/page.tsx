@@ -46,14 +46,15 @@ const ExchangePage = () => {
       </div>
 
       <div className="w-full flex flex-col items-center">
-        <div className="relative w-full h-40 sm:h-56 md:h-72">
+        <div className="w-full">
+          {/* Natural aspect ratio so the full "Savor Orlando" banner
+              (with its baked-in text) shows uncropped at any viewport. */}
           <Image
             src={exchangeBanner}
             alt="Savor Orlando — great adventures and magic moments await you"
-            fill
             priority
             sizes="100vw"
-            className="object-cover"
+            className="w-full h-auto"
           />
         </div>
 

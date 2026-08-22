@@ -49,14 +49,16 @@ const GatewaysPage = () => {
 
   return (
     <div className="w-full flex flex-col items-center bg-gray-50 dark:bg-[#0f172a]">
-      <div className="relative w-full h-40 sm:h-56 md:h-72">
+      <div className="w-full">
+        {/* Natural aspect ratio (no fixed height, no object-cover) so
+            the full banner shows on both phone and desktop — matches the
+            image the client provided instead of a cropped centre. */}
         <Image
           src={getawaysBanner}
           alt="Interval Travel — hotel deals, cruise discounts, car savings"
-          fill
           priority
           sizes="100vw"
-          className="object-cover"
+          className="w-full h-auto"
         />
       </div>
 
