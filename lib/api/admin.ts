@@ -6,6 +6,7 @@
 // separate interval-ash-server repo, not in this frontend project.
 import firebaseApp, { isFirebaseConfigured } from "@/lib/firebase/firebase.config";
 import type { CabinKey, Cruise } from "@/lib/types/cruise";
+import type { Airport, CabinClass, Flight } from "@/lib/types/flight";
 import type { ApiResponse, Resort } from "@/lib/types/resort";
 import { getAuth } from "firebase/auth";
 
@@ -200,6 +201,68 @@ export async function updateCruise(
 ): Promise<Cruise> {
   return apiFetch<Cruise>(`/cruises/${encodeURIComponent(id)}`, {
     method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+// Fields the admin airport form collects. Matches the Airport schema on
+// the backend (interval-ash-server/src/models/airport.model.ts) — these
+// four are everything the flight-search autocomplete renders.
+export interface CreateAirportInput {
+  code: string;
+  city: string;
+  name: string;
+  country: string;
+  // Optional. Supplying them is what lets flight times and fares for
+  // this airport be measured from its real position instead of its
+  // country's geographic centre.
+  latitude?: number;
+  longitude?: number;
+}
+
+/**
+ * Adds an airport to the reference list the flight search autocompletes
+ * against. Admin-only on the backend. Do this before adding a flight
+ * that touches a new airport — the flight endpoint rejects codes it
+ * doesn't already know.
+ */
+export async function createAirport(input: CreateAirportInput): Promise<Airport> {
+  return apiFetch<Airport>("/airports", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+// Fields the admin flight form collects. `duration`, `arrivalTime` and
+// `retailPrice` are optional: leave them out and the backend derives
+// them from the route's distance, the same way every seeded flight is
+// priced and timed.
+export interface CreateFlightInput {
+  flightId: string;
+  airline: string;
+  airlineLogo?: string;
+  flightNumber: string;
+  origin: string;
+  originCity?: string;
+  destination: string;
+  destinationCity?: string;
+  departureTime: string;
+  arrivalTime?: string;
+  duration?: string;
+  stops: number;
+  stopLabel?: string;
+  cabinClass: CabinClass;
+  retailPrice?: number;
+  seatsAvailable: number;
+  aircraft: string;
+  refundable: boolean;
+  baggage?: string;
+}
+
+/** Creates a new flight offering. Admin-only on the backend. */
+export async function createFlight(input: CreateFlightInput): Promise<Flight> {
+  return apiFetch<Flight>("/flights", {
+    method: "POST",
     body: JSON.stringify(input),
   });
 }

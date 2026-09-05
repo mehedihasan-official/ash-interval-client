@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/providers/AuthProvider";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { FaBars, FaHome, FaHotel, FaPlus, FaShip, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
+import { FaBars, FaHome, FaHotel, FaMapMarkerAlt, FaPlaneDeparture, FaPlus, FaShip, FaSignOutAlt, FaTachometerAlt, FaTimes, FaUsers } from "react-icons/fa";
 
 // The first entry sends the admin back to the members-facing
 // dashboard so they can jump out of the admin shell without having
@@ -25,6 +25,10 @@ const adminLinks = [
   { name: "Add Resort", href: "/dashboard/admin/resorts/new", icon: FaPlus },
   { name: "Cruises", href: "/dashboard/admin/cruises", icon: FaShip },
   { name: "Add Cruise", href: "/dashboard/admin/cruises/new", icon: FaPlus },
+  // Flights and airports are separate entries on purpose: an airport is
+  // reference data added once, a flight is inventory added often.
+  { name: "Add Flight", href: "/dashboard/admin/flights/new", icon: FaPlaneDeparture },
+  { name: "Add Airport", href: "/dashboard/admin/airports/new", icon: FaMapMarkerAlt },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

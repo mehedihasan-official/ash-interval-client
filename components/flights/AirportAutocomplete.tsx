@@ -8,11 +8,20 @@ import { searchAirports } from "@/lib/api/flights";
 import type { Airport } from "@/lib/types/flight";
 import { useEffect, useRef, useState } from "react";
 
+const DEFAULT_LABEL_CLASS =
+  "block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2";
+const DEFAULT_INPUT_CLASS =
+  "w-full px-4 py-3 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a] text-gray-800 dark:text-white focus:outline-none focus:border-[#0077be]";
+
 interface AirportAutocompleteProps {
   label: string;
   placeholder?: string;
   value: string;
   onChange: (code: string, airport?: Airport) => void;
+  /** Overrides so the admin forms can match their own field styling. */
+  labelClassName?: string;
+  inputClassName?: string;
+  required?: boolean;
 }
 
 const AirportAutocomplete = ({
@@ -20,6 +29,9 @@ const AirportAutocomplete = ({
   placeholder = "Airport code or city",
   value,
   onChange,
+  labelClassName = DEFAULT_LABEL_CLASS,
+  inputClassName = DEFAULT_INPUT_CLASS,
+  required = false,
 }: AirportAutocompleteProps) => {
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<Airport[]>([]);
@@ -82,8 +94,9 @@ const AirportAutocomplete = ({
 
   return (
     <div className="relative" ref={containerRef}>
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+      <label className={labelClassName}>
         {label}
+        {required && <span className="text-red-500"> *</span>}
       </label>
       <input
         type="text"
@@ -96,7 +109,7 @@ const AirportAutocomplete = ({
           setIsOpen(true);
         }}
         onFocus={() => query.trim().length > 0 && setIsOpen(true)}
-        className="w-full px-4 py-3 border border-gray-300 dark:border-white/10 rounded-lg bg-white dark:bg-[#0f172a] text-gray-800 dark:text-white focus:outline-none focus:border-[#0077be]"
+        className={inputClassName}
         autoComplete="off"
       />
 
