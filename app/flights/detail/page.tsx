@@ -7,6 +7,7 @@
 // the server response so the client can't accidentally drift.
 import { loadFlightDraft, updateFlightDraft } from "@/lib/flightDraft";
 import type { FlightDraft } from "@/lib/flightDraft";
+import { fareWeightForParty, type TripType } from "@/lib/types/flight";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -16,6 +17,14 @@ const formatMoney = (value: number) =>
   value.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
 const formatPoints = (value: number) => value.toLocaleString();
+
+// Spells out what a single traveler's fare buys, so a round-trip price
+// isn't mistaken for a one-way one.
+const TRIP_FARE_LABEL: Record<TripType, string> = {
+  oneway: "one way",
+  roundtrip: "round trip",
+  multicity: "full trip",
+};
 
 const formatDate = (iso: string) => {
   if (!iso) return "Any date";
@@ -68,6 +77,16 @@ const FlightDetailPage = () => {
   const { flight } = draft;
   const totalTravelers = draft.adults + draft.children + draft.infants;
   const pricing = flight.pricing;
+
+  // pricing is one traveler's fare for the whole itinerary; the party
+  // total scales it by who's actually flying.
+  const fareWeight = fareWeightForParty(
+    draft.adults,
+    draft.children,
+    draft.infants,
+  );
+  const partyCash = Math.round(pricing.discountedPrice * fareWeight * 100) / 100;
+  const partyPoints = Math.round(pricing.totalPoints * fareWeight);
 
   const handleContinue = () => {
     updateFlightDraft({ paymentMethod });
@@ -174,7 +193,10 @@ const FlightDetailPage = () => {
                 Fare Breakdown
               </h2>
               <div className="space-y-3 text-sm">
-                <FareRow label="Base fare" value={formatMoney(pricing.retailPrice)} />
+                <FareRow
+                  label={`Base fare (${TRIP_FARE_LABEL[draft.tripType]})`}
+                  value={formatMoney(pricing.retailPrice)}
+                />
                 <FareRow
                   label="Interval Member discount (47%)"
                   value={`-${formatMoney(pricing.retailPrice - pricing.discountedPrice)}`}
@@ -200,19 +222,19 @@ const FlightDetailPage = () => {
                   onSelect={() => setPaymentMethod("cash")}
                   title="Pay with Cash"
                   subtitle="Credit or debit card"
-                  amount={`${formatMoney(pricing.discountedPrice)} + tax`}
+                  amount={`${formatMoney(partyCash)} + tax`}
                 />
                 <PaymentOption
                   active={paymentMethod === "points"}
                   onSelect={() => setPaymentMethod("points")}
                   title="Pay with Points"
                   subtitle="Interval Rewards"
-                  amount={`${formatPoints(pricing.totalPoints)} points total`}
+                  amount={`${formatPoints(partyPoints)} points total`}
                   detail={
                     <>
                       <p>
-                        Base: {formatPoints(pricing.pointsRequired)} pts &bull; 10%
-                        fee: +{formatPoints(pricing.processingFee)} pts
+                        Per traveler — base: {formatPoints(pricing.pointsRequired)}{" "}
+                        pts &bull; 10% fee: +{formatPoints(pricing.processingFee)} pts
                       </p>
                     </>
                   }
@@ -241,11 +263,14 @@ const FlightDetailPage = () => {
 
               <div className="border-t border-gray-200 dark:border-white/10 mt-4 pt-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-300">Total</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Total for {totalTravelers} traveler
+                    {totalTravelers !== 1 ? "s" : ""}
+                  </span>
                   <span className="font-bold text-[#0077be] dark:text-[#7fb8e6]">
                     {paymentMethod === "cash"
-                      ? formatMoney(pricing.discountedPrice)
-                      : `${formatPoints(pricing.totalPoints)} pts`}
+                      ? formatMoney(partyCash)
+                      : `${formatPoints(partyPoints)} pts`}
                   </span>
                 </div>
               </div>

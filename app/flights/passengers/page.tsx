@@ -9,6 +9,7 @@ import type { FlightDraft } from "@/lib/flightDraft";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import {
   FLIGHT_ADDON_PRICING,
+  fareWeightForParty,
   type FlightPassenger,
 } from "@/lib/types/flight";
 import Link from "next/link";
@@ -167,8 +168,13 @@ const FlightPassengersPage = () => {
     router.push("/flights/payment");
   };
 
+  // `pricing` is one traveler's fare for the whole itinerary, so the
+  // summary has to scale it by the party before adding the add-ons.
+  const fareWeight = fareWeightForParty(draft.adults, draft.children, draft.infants);
   const flightCost =
-    paymentMethod === "points" ? pricing.totalPoints : pricing.discountedPrice;
+    paymentMethod === "points"
+      ? Math.round(pricing.totalPoints * fareWeight)
+      : Math.round(pricing.discountedPrice * fareWeight * 100) / 100;
   const totalCost = flightCost + addOnsCost;
 
   return (
@@ -370,12 +376,13 @@ const FlightPassengersPage = () => {
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-300">
-                    Flight ({paymentMethod === "cash" ? "cash" : "points"})
+                    Flight &times; {passengers.length} traveler
+                    {passengers.length !== 1 ? "s" : ""}
                   </span>
                   <span className="font-semibold text-gray-800 dark:text-white">
                     {paymentMethod === "cash"
-                      ? formatMoney(pricing.discountedPrice)
-                      : `${pricing.totalPoints.toLocaleString()} pts`}
+                      ? formatMoney(flightCost)
+                      : `${flightCost.toLocaleString()} pts`}
                   </span>
                 </div>
                 {addOnsCost > 0 && (

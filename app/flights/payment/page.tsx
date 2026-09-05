@@ -8,7 +8,7 @@ import { createFlightBooking } from "@/lib/api/flights";
 import { clearFlightDraft, loadFlightDraft } from "@/lib/flightDraft";
 import type { FlightDraft } from "@/lib/flightDraft";
 import { useAuth } from "@/lib/providers/AuthProvider";
-import { FLIGHT_ADDON_PRICING } from "@/lib/types/flight";
+import { FLIGHT_ADDON_PRICING, fareWeightForParty } from "@/lib/types/flight";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -69,8 +69,20 @@ const FlightPaymentPage = () => {
     seatCount * FLIGHT_ADDON_PRICING.seatPoints +
     (extraBaggage ? FLIGHT_ADDON_PRICING.baggagePoints : 0);
 
-  const cashTotal = pricing ? pricing.discountedPrice + addOnsCash : 0;
-  const pointsTotal = pricing ? pricing.totalPoints + addOnsPoints : 0;
+  // `pricing` is per traveler for the whole itinerary. The server
+  // recomputes these totals from the submitted passenger list before it
+  // charges anything — this is the preview that has to agree with it.
+  const travelers = draft ? draft.adults + draft.children + draft.infants : 0;
+  const fareWeight = draft
+    ? fareWeightForParty(draft.adults, draft.children, draft.infants)
+    : 1;
+  const fareCash = pricing
+    ? Math.round(pricing.discountedPrice * fareWeight * 100) / 100
+    : 0;
+  const farePoints = pricing ? Math.round(pricing.totalPoints * fareWeight) : 0;
+
+  const cashTotal = fareCash + addOnsCash;
+  const pointsTotal = farePoints + addOnsPoints;
   const insufficientPoints =
     paymentMethod === "points" && pointsTotal > MOCK_POINTS_BALANCE;
 
@@ -252,8 +264,11 @@ const FlightPaymentPage = () => {
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-700 dark:text-gray-200">
-                    <span>Flight base</span>
-                    <span>{pricing.pointsRequired.toLocaleString()} pts</span>
+                    <span>
+                      Flight &times; {travelers} traveler
+                      {travelers !== 1 ? "s" : ""}
+                    </span>
+                    <span>{farePoints.toLocaleString()} pts</span>
                   </div>
                   {addOnsPoints > 0 && (
                     <div className="flex justify-between text-gray-700 dark:text-gray-200">
@@ -261,10 +276,10 @@ const FlightPaymentPage = () => {
                       <span>{addOnsPoints.toLocaleString()} pts</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-gray-700 dark:text-gray-200">
-                    <span>10% processing fee</span>
-                    <span>+{pricing.processingFee.toLocaleString()} pts</span>
-                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Includes the 10% points processing fee (
+                    {pricing.processingFee.toLocaleString()} pts per traveler).
+                  </p>
                   <div className="pt-2 border-t border-gray-200 dark:border-white/10 flex justify-between font-bold text-gray-800 dark:text-white">
                     <span>Total</span>
                     <span>{pointsTotal.toLocaleString()} pts</span>
@@ -318,11 +333,13 @@ const FlightPaymentPage = () => {
               </p>
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10 space-y-2 text-sm">
                 <div className="flex justify-between text-gray-700 dark:text-gray-200">
-                  <span>Flight</span>
+                  <span>
+                    Flight &times; {travelers} traveler{travelers !== 1 ? "s" : ""}
+                  </span>
                   <span>
                     {paymentMethod === "cash"
-                      ? formatMoney(pricing.discountedPrice)
-                      : `${pricing.totalPoints.toLocaleString()} pts`}
+                      ? formatMoney(fareCash)
+                      : `${farePoints.toLocaleString()} pts`}
                   </span>
                 </div>
                 {(addOnsCash > 0 || addOnsPoints > 0) && (

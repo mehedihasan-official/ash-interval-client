@@ -106,6 +106,11 @@ const ConfirmationInner = () => {
 
   const snap = booking.flightSnapshot;
   const pricing = booking.pricing;
+  // Bookings written before fares were priced per party don't carry a
+  // traveler count, so fall back to the passenger list.
+  const travelers = pricing.travelers ?? booking.passengers.length;
+  const fareCash = pricing.fareCash ?? pricing.discountedPrice;
+  const farePoints = pricing.farePoints ?? pricing.totalPoints;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f172a] py-10 px-4">
@@ -229,11 +234,13 @@ const ConfirmationInner = () => {
               </span>
             </div>
             <div className="flex justify-between text-gray-700 dark:text-gray-200">
-              <span>Flight</span>
+              <span>
+                Flight &times; {travelers} traveler{travelers !== 1 ? "s" : ""}
+              </span>
               <span>
                 {booking.paymentMethod === "cash"
-                  ? formatMoney(pricing.discountedPrice)
-                  : `${pricing.totalPoints.toLocaleString()} pts`}
+                  ? formatMoney(fareCash)
+                  : `${farePoints.toLocaleString()} pts`}
               </span>
             </div>
             {(pricing.addOnsCash > 0 || pricing.addOnsPoints > 0) && (

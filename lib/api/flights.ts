@@ -10,6 +10,7 @@ import type {
   Flight,
   FlightBooking,
   FlightSearchResult,
+  TripType,
 } from "@/lib/types/flight";
 import type { ApiResponse } from "@/lib/types/resort";
 
@@ -81,6 +82,9 @@ export async function searchAirports(
 export interface FlightSearchParams {
   origin?: string;
   destination?: string;
+  // Affects the price, not just the itinerary: the server quotes a
+  // round trip for both legs. Omitting it quotes a single one-way.
+  tripType?: TripType;
   cabinClass?: CabinClass;
   airline?: string;
   stops?: "nonstop" | "1stop" | "2plus";
@@ -90,10 +94,9 @@ export interface FlightSearchParams {
 }
 
 /**
- * Run a flight search. The server returns a fallback (all flights) when
- * the exact origin/destination pairing has no matches; `exactMatch: false`
- * tells the UI to show that hint so the traveler knows they're looking
- * at demo results rather than routes that literally exist.
+ * Run a flight search. Prices come back per traveler for the whole
+ * itinerary — already doubled for a round trip — so the results card
+ * can show them the way an airline site does.
  */
 export async function searchFlights(
   params: FlightSearchParams = {},
@@ -101,6 +104,7 @@ export async function searchFlights(
   const query = new URLSearchParams();
   if (params.origin) query.set("origin", params.origin);
   if (params.destination) query.set("destination", params.destination);
+  if (params.tripType) query.set("tripType", params.tripType);
   if (params.cabinClass) query.set("cabinClass", params.cabinClass);
   if (params.airline) query.set("airline", params.airline);
   if (params.stops) query.set("stops", params.stops);

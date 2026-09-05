@@ -75,7 +75,10 @@ const FlightResultsInner = () => {
   const [sortBy, setSortBy] = useState<"best" | "cheapest" | "fastest" | "earliest">(
     "best",
   );
-  const [maxPrice, setMaxPrice] = useState(2500);
+  // null = "no cap yet"; the slider adopts the priciest result once the
+  // fares are in. A fixed $2,500 ceiling used to silently hide every
+  // long-haul round trip, which now runs well past it.
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [selectedStops, setSelectedStops] = useState<
     "all" | "nonstop" | "1stop" | "2plus"
   >("all");
@@ -92,11 +95,18 @@ const FlightResultsInner = () => {
         const params: FlightSearchParams = {
           origin: search.from,
           destination: search.to,
+          // The server prices both legs of a round trip, so the fares
+          // below are for the itinerary the member actually searched.
+          tripType: search.tripType,
         };
         const result = await searchFlights(params);
         if (cancelled) return;
         setFlights(result.flights);
         setExactMatch(result.exactMatch);
+        // Drop any cap the member set on the previous search — a
+        // domestic ceiling carried onto a long-haul list would filter
+        // every result away.
+        setMaxPrice(null);
       } catch (error) {
         if (cancelled) return;
         setErrorMessage(
@@ -112,7 +122,7 @@ const FlightResultsInner = () => {
     return () => {
       cancelled = true;
     };
-  }, [search.from, search.to]);
+  }, [search.from, search.to, search.tripType]);
 
   // The list of airlines that have any results at all — feeds the
   // "Airlines" filter so we don't offer checkboxes for carriers that
@@ -122,6 +132,19 @@ const FlightResultsInner = () => {
     for (const flight of flights) set.add(flight.airline);
     return Array.from(set).sort();
   }, [flights]);
+
+  // Slider bounds, rounded out to the nearest $50 so the handle has
+  // somewhere to sit at both ends of the range.
+  const priceBounds = useMemo(() => {
+    if (flights.length === 0) return { min: 100, max: 2500 };
+    const prices = flights.map((flight) => flight.retailPrice);
+    return {
+      min: Math.floor(Math.min(...prices) / 50) * 50,
+      max: Math.ceil(Math.max(...prices) / 50) * 50,
+    };
+  }, [flights]);
+
+  const priceCap = maxPrice ?? priceBounds.max;
 
   const filteredFlights = useMemo(() => {
     const timeToMinutes = (durationOrTime: string) => {
@@ -140,7 +163,7 @@ const FlightResultsInner = () => {
     };
 
     let filtered = flights.filter((flight) => {
-      if (flight.retailPrice > maxPrice) return false;
+      if (flight.retailPrice > priceCap) return false;
       if (selectedStops === "nonstop" && flight.stops !== 0) return false;
       if (selectedStops === "1stop" && flight.stops !== 1) return false;
       if (selectedStops === "2plus" && flight.stops < 2) return false;
@@ -169,7 +192,7 @@ const FlightResultsInner = () => {
     }
 
     return filtered;
-  }, [flights, maxPrice, selectedStops, selectedAirlines, refundableOnly, sortBy]);
+  }, [flights, priceCap, selectedStops, selectedAirlines, refundableOnly, sortBy]);
 
   const handleSelectFlight = (flight: Flight) => {
     saveFlightDraft({
@@ -241,14 +264,14 @@ const FlightResultsInner = () => {
 
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                  Max Price: ${maxPrice}
+                  Max Price: ${priceCap.toLocaleString()}
                 </label>
                 <input
                   type="range"
-                  min={100}
-                  max={2500}
+                  min={priceBounds.min}
+                  max={priceBounds.max}
                   step={50}
-                  value={maxPrice}
+                  value={priceCap}
                   onChange={(event) => setMaxPrice(Number(event.target.value))}
                   className="w-full accent-[#0077be]"
                 />
@@ -380,6 +403,7 @@ const FlightResultsInner = () => {
                   <FlightResultCard
                     key={flight._id}
                     flight={flight}
+                    tripType={search.tripType}
                     onSelect={() => handleSelectFlight(flight)}
                   />
                 ))}
@@ -392,12 +416,24 @@ const FlightResultsInner = () => {
   );
 };
 
+// What a fare covers, so nobody reads a round-trip price as one-way.
+const TRIP_PRICE_LABEL: Record<TripType, string> = {
+  oneway: "one way, per traveler",
+  roundtrip: "round trip, per traveler",
+  multicity: "full trip, per traveler",
+};
+
 interface FlightResultCardProps {
   flight: Flight;
+  tripType: TripType;
   onSelect: () => void;
 }
 
-const FlightResultCard = ({ flight, onSelect }: FlightResultCardProps) => {
+const FlightResultCard = ({
+  flight,
+  tripType,
+  onSelect,
+}: FlightResultCardProps) => {
   const lowSeats = flight.seatsAvailable > 0 && flight.seatsAvailable <= 5;
 
   return (
@@ -462,6 +498,9 @@ const FlightResultCard = ({ flight, onSelect }: FlightResultCardProps) => {
           </p>
           <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
             47% Member Savings
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {TRIP_PRICE_LABEL[tripType]}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             or {flight.pricing.totalPoints.toLocaleString()} pts

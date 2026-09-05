@@ -19,6 +19,10 @@ export type CabinClass =
 
 export type TripType = "oneway" | "roundtrip" | "multicity";
 
+// Every figure here is per traveler, for the whole itinerary — a round
+// trip is already quoted as a round trip, the way an airline site
+// quotes it. Multiply by the party's fare weight (see
+// sumPassengerFareWeight below) to get a booking total.
 export interface FlightPricing {
   retailPrice: number;
   discountedPrice: number;
@@ -113,6 +117,12 @@ export interface FlightBooking extends CreateFlightBookingInput {
     retailPrice: number;
   };
   pricing: FlightPricing & {
+    // Optional because bookings taken before fares were priced per
+    // party don't carry them; the confirmation page falls back to the
+    // per-traveler figures for those.
+    travelers?: number;
+    fareCash?: number;
+    farePoints?: number;
     addOnsCash: number;
     addOnsPoints: number;
     grandTotalCash: number;
@@ -129,3 +139,30 @@ export const FLIGHT_ADDON_PRICING = {
   baggageCash: 35,
   baggagePoints: 875,
 } as const;
+
+// Mirrors PASSENGER_FARE_WEIGHT on the server (utils/flight-pricing.ts)
+// so the Booking Summary previews the same total the server will
+// charge. The server still recomputes it from the submitted passenger
+// list — this is display only.
+const PASSENGER_FARE_WEIGHT: Record<FlightPassenger["type"], number> = {
+  Adult: 1,
+  Child: 0.75,
+  Infant: 0.1,
+};
+
+/**
+ * Fare weight for a party: 2 adults + 1 child is 2.75 adult fares, not
+ * 3, and a lap infant is a token 0.1. Never returns less than one fare
+ * so a summary can't show $0.
+ */
+export const fareWeightForParty = (
+  adults: number,
+  children: number,
+  infants: number,
+): number => {
+  const weight =
+    adults * PASSENGER_FARE_WEIGHT.Adult +
+    children * PASSENGER_FARE_WEIGHT.Child +
+    infants * PASSENGER_FARE_WEIGHT.Infant;
+  return weight > 0 ? weight : 1;
+};
