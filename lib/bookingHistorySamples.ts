@@ -47,7 +47,7 @@ const SAMPLE_ROWS: Record<HistoryTabKey, HistoryRow[]> = {
         endDate: "Fri, June 12, 2026",
       },
       status: "Confirmed",
-      actionLabel: "Evaluation Pending",
+      actionLabel: null,
       actionHref: null,
     },
     {
@@ -64,7 +64,7 @@ const SAMPLE_ROWS: Record<HistoryTabKey, HistoryRow[]> = {
         endDate: "Fri, June 12, 2026",
       },
       status: "Confirmed",
-      actionLabel: "Evaluation Pending",
+      actionLabel: null,
       actionHref: null,
     },
   ],

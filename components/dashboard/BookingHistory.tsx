@@ -202,8 +202,7 @@ const BookingHistory = ({
             ))}
           </div>
         ) : (
-          <>  
-
+          <>
             <div className="overflow-x-auto">
               {/* One grid for the header and every row, so the columns
                   line up while the whole thing scrolls sideways. */}
