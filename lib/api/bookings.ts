@@ -88,8 +88,12 @@ export interface Booking extends CreateBookingInput {
   _id: string;
   createdAt?: string;
   updatedAt?: string;
+  // Records written before the current booking shape store the stay under
+  // these keys and carry a status the newer flow doesn't set, so both are
+  // optional and every reader has to fall through them.
   checkInDate?: string;
   checkOutDate?: string;
+  status?: string;
 }
 
 /** Records a confirmed booking. Called once payment/points redemption is submitted. */

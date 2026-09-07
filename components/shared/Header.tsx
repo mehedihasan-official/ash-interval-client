@@ -21,6 +21,7 @@ const userMenuItems = [
   { name: "Exchange", path: "/dashboard/exchange" },
   { name: "Membership", path: "/dashboard/membership" },
   { name: "Resort Directory", path: "/resort-directory" },
+  { name: "History", path: "/dashboard/history" },
   { name: "My Account", path: "/my-account" },
   { name: "My Bookings", path: "/my-bookings" },
 ];

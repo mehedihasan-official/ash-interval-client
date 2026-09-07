@@ -1,14 +1,14 @@
 "use client";
 
-// Landing page a member sees right after signing in. Gives a quick
-// snapshot of their upcoming trips plus fast paths into the rest of the
-// site (browse resorts, view all bookings, manage account) rather than
-// dropping them straight into the resort directory with no context.
+// Landing page a member sees right after signing in. Wallet balances and
+// fast paths into the rest of the site, then their booking history across
+// resorts, flights, cars and cruises — rather than dropping them straight
+// into the resort directory with no context.
+import BookingHistory from "@/components/dashboard/BookingHistory";
 import Loading from "@/components/resorts/Loading";
 import { fetchBookingsByEmail, type Booking } from "@/lib/api/bookings";
 import { fetchWallet, type WalletSummary } from "@/lib/api/wallet";
 import { useAuth } from "@/lib/providers/AuthProvider";
-import { getResortName, type Resort } from "@/lib/types/resort";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -18,7 +18,6 @@ import {
   FaCoins,
   FaCompass,
   FaExchangeAlt,
-  FaMapMarkerAlt,
   FaPlane,
   FaShip,
   FaSuitcaseRolling,
@@ -32,12 +31,6 @@ const formatUsd = (value: number) =>
 
 const getBookingStartDate = (booking: Booking) =>
   new Date(booking.startDate ?? booking.checkInDate ?? 0);
-
-const getBookingEndDate = (booking: Booking) =>
-  new Date(booking.endDate ?? booking.checkOutDate ?? 0);
-
-const formatDate = (date: Date) =>
-  Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleDateString();
 
 const isUpcoming = (booking: Booking) =>
   getBookingStartDate(booking).getTime() >= Date.now();
@@ -317,87 +310,16 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Upcoming bookings */}
+        {/* Booking history. Replaces the old "Upcoming Trips" strip:
+            three cards of what's next told a member less than the full
+            record of what they've booked across all four products, and
+            this is the view the reference site leads with. */}
         <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-[#0077be] rounded-full" />
-              Upcoming Trips
-            </h2>
-            {bookings.length > 0 && (
-              <Link
-                href="/my-bookings"
-                className="text-sm text-[#1a6fa8] dark:text-[#7fb8e6] hover:underline font-medium"
-              >
-                View all &rarr;
-              </Link>
-            )}
-
-           
-
-         
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
-              {[0, 1, 2].map((key) => (
-                <div
-                  key={key}
-                  className="h-32 bg-gray-100 dark:bg-white/5 rounded-xl"
-                />
-              ))}
-            </div>
-          ) : upcomingBookings.length === 0 ? (
-            <div className="bg-white dark:bg-[#16223d] border border-dashed border-gray-300 dark:border-white/10 rounded-xl p-8 text-center">
-              <FaSuitcaseRolling className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-300 font-medium">
-                You don&apos;t have any upcoming trips yet.
-              </p>
-              <Link
-                href="/resort-directory"
-                className="inline-block mt-4 bg-[#0077be] dark:bg-[#3ba0ea] text-white dark:text-[#0f172a] font-bold px-5 py-2 rounded-lg text-sm hover:bg-[#005a8e] dark:hover:bg-[#62b4f0] transition"
-              >
-                Start Exploring
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {upcomingBookings.map((booking) => (
-                <div
-                  key={booking._id}
-                  className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 shadow-sm"
-                >
-                  {(() => {
-                    const resort =
-                      booking.resort ??
-                      ({ place_name: "Unknown resort" } as Resort);
-                    return (
-                      <>
-                        <p className="font-bold text-gray-800 dark:text-white text-sm leading-snug line-clamp-1">
-                          {getResortName(resort)}
-                        </p>
-                        {resort.location && (
-                          <p className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-xs mt-1">
-                            <FaMapMarkerAlt className="shrink-0" />
-                            <span className="line-clamp-1">
-                              {resort.location}
-                            </span>
-                          </p>
-                        )}
-                      </>
-                    );
-                  })()}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    {formatDate(getBookingStartDate(booking))} &rarr;{" "}
-                    {formatDate(getBookingEndDate(booking))}
-                  </p>
-                  <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide text-[#0077be] dark:text-[#7fb8e6] bg-blue-50 dark:bg-white/10 px-2 py-1 rounded">
-                    {booking.unitType}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <BookingHistory
+            email={user.email}
+            limit={3}
+            viewAllHref="/dashboard/history"
+          />
         </div>
 
         {/* Explore more resorts */}
