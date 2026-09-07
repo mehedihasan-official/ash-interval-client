@@ -14,16 +14,20 @@ import { useAuth } from "@/lib/providers/AuthProvider";
 import headerBanner from "@/public/desktop-header-part.png";
 import ThemeToggle from "./ThemeToggle";
 
-// Nav items shown once a regular (non-admin) user is logged in.
+// Nav items shown once a regular (non-admin) user is logged in, in
+// three groups: where to go (Dashboard), what to browse (Getaways
+// through Resort Directory), then the member's own records — bookings
+// and history side by side, since History is the same bookings across
+// all four products — with account settings last.
 const userMenuItems = [
   { name: "Dashboard", path: "/dashboard" },
   { name: "Getaways", path: "/dashboard/gateways" },
   { name: "Exchange", path: "/dashboard/exchange" },
   { name: "Membership", path: "/dashboard/membership" },
   { name: "Resort Directory", path: "/resort-directory" },
+  { name: "My Bookings", path: "/my-bookings" },
   { name: "History", path: "/dashboard/history" },
   { name: "My Account", path: "/my-account" },
-  { name: "My Bookings", path: "/my-bookings" },
 ];
 
 // Nav tabs shown to visitors who have not logged in yet.
@@ -141,13 +145,18 @@ const Header = () => {
 
         {/* Desktop nav tabs */}
         <nav className="hidden md:flex bg-[#18294B] dark:bg-[#101b30]">
-          <div className="max-w-245 mx-auto w-full flex">
+          {/* The signed-in tabs are wider than the bar between md and
+              roughly 800px. shrink-0 + nowrap stops "Resort Directory"
+              from wrapping and making the bar two lines tall; the
+              tighter padding below lg buys back enough room that the
+              scroll almost never kicks in. */}
+          <div className="max-w-245 mx-auto w-full flex overflow-x-auto">
             {user
               ? userMenuItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.path}
-                    className={`text-white text-xs px-4 py-3 hover:bg-white/10 transition border-r border-white/10 last:border-r-0 ${
+                    className={`shrink-0 whitespace-nowrap text-white text-xs px-3 lg:px-4 py-3 hover:bg-white/10 transition border-r border-white/10 last:border-r-0 ${
                       pathname === item.path ? "bg-white/20" : ""
                     }`}
                   >
