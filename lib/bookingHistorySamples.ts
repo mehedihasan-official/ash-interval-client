@@ -67,7 +67,28 @@ const SAMPLE_ROWS: Record<HistoryTabKey, HistoryRow[]> = {
       actionLabel: null,
       actionHref: null,
     },
+    {
+  id: "disneys-animal-kingdom-villas-jambo-house-2",
+  reference: "XXXXXXXXX", // Interval exchange reference — not provided yet
+  typeLabel: "Exchange",
+  transactionDate: "TBD", // date the exchange was booked — different from the stay dates below, not provided yet
+  relinquishment: null,
+  confirmation: {
+    name: "Disney's Animal Kingdom Villas at Jambo House",
+    code: "DAK",
+    details: ["Unit: 2 Bedrooms", "Week: TBD"], // exact week number not provided
+    startDate: "Fri, October 24, 2025",
+    endDate: "Fri, October 31, 2025",
+  },
+  status: "Confirmed",
+  actionLabel: null,
+  actionHref: null,
+},
   ],
+
+
+
+
   flights: [
     {
       id: "sample-flight-1",
