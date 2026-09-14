@@ -147,6 +147,28 @@ export const getResortCountry = (resort: Resort): string | null => {
   return typeof country === "string" && country.trim() ? country.trim() : null;
 };
 
+export const isDisneyResort = (resort: Resort | null | undefined): boolean => {
+  if (!resort) return false;
+
+  const candidates = [
+    getResortName(resort),
+    resort.name,
+    resort.place_name,
+    resort.location,
+    resort.description,
+    resort.country,
+    resort.region,
+    resort.symbol,
+    resort.onSite,
+  ];
+
+  return candidates.some(
+    (value) =>
+      typeof value === "string" &&
+      normalizeResortText(value).includes("disney"),
+  );
+};
+
 const LOCATION_FIELD_NAMES = [
   "location",
   "country",

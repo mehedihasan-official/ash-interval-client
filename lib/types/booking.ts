@@ -2,11 +2,16 @@
 // checkout -> payment -> confirmation). Pricing here mirrors the tiers shown
 // on the resort page's Exchange/Getaways panel so the numbers a visitor sees
 // while browsing stay consistent all the way through checkout.
-import type { Resort } from "@/lib/types/resort";
+import { isDisneyResort, type Resort } from "@/lib/types/resort";
 
 export type VacationType = "exchange" | "getaways";
 
-export type UnitType = "Studio" | "1 Bedroom" | "2 Bedroom" | "3 Bedroom" | "4+ Bedroom";
+export type UnitType =
+  | "Studio"
+  | "1 Bedroom"
+  | "2 Bedroom"
+  | "3 Bedroom"
+  | "4+ Bedroom";
 
 export const UNIT_TYPES: UnitType[] = [
   "Studio",
@@ -15,6 +20,11 @@ export const UNIT_TYPES: UnitType[] = [
   "3 Bedroom",
   "4+ Bedroom",
 ];
+
+export const DISNEY_UNIT_TYPES: UnitType[] = ["Studio", "1 Bedroom"];
+
+export const getAvailableUnitTypes = (resort?: Resort | null): UnitType[] =>
+  isDisneyResort(resort) ? DISNEY_UNIT_TYPES : UNIT_TYPES;
 
 // Roughly how many guests each unit type comfortably sleeps — shown on the
 // unit cards so a member can judge fit before picking a size.
@@ -34,6 +44,24 @@ export const POINTS_PER_NIGHT: Record<UnitType, number> = {
   "2 Bedroom": 4500,
   "3 Bedroom": 6000,
   "4+ Bedroom": 10000,
+};
+
+export const DISNEY_POINTS_PER_NIGHT: Record<"Studio" | "1 Bedroom", number> = {
+  Studio: 3500,
+  "1 Bedroom": 5000,
+};
+
+export const getPointsPerNight = (
+  unitType: UnitType,
+  resort?: Resort | null,
+): number => {
+  if (isDisneyResort(resort)) {
+    const disneyPrice =
+      DISNEY_POINTS_PER_NIGHT[unitType as keyof typeof DISNEY_POINTS_PER_NIGHT];
+    if (typeof disneyPrice === "number") return disneyPrice;
+  }
+
+  return POINTS_PER_NIGHT[unitType];
 };
 
 // Cash price per night (USD, before tax), by unit type.
@@ -93,8 +121,11 @@ export const getNights = (earliestDate: string, latestDate: string): number => {
 export const getCashTotal = (unitType: UnitType, nights: number) =>
   CASH_PRICE_PER_NIGHT[unitType] * nights;
 
-export const getPointsTotal = (unitType: UnitType, nights: number) =>
-  POINTS_PER_NIGHT[unitType] * nights;
+export const getPointsTotal = (
+  unitType: UnitType,
+  nights: number,
+  resort?: Resort | null,
+) => getPointsPerNight(unitType, resort) * nights;
 
 // Cash bookings show a tax-inclusive total at checkout/payment.
 export const getCashTotalWithTax = (unitType: UnitType, nights: number) =>

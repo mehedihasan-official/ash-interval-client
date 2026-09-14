@@ -6,8 +6,8 @@
 // guests are set, "Search Available Units" hands off to the available-unit
 // page, which is where an actual unit gets picked.
 import { useAuth } from "@/lib/providers/AuthProvider";
-import type { Resort } from "@/lib/types/resort";
 import type { BookingSearch } from "@/lib/types/booking";
+import { isDisneyResort, type Resort } from "@/lib/types/resort";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
@@ -37,6 +37,7 @@ const CASH_TIERS = [
 const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
   const { user } = useAuth();
   const router = useRouter();
+  const isDisney = isDisneyResort(resort);
   const [vacationType, setVacationType] = useState<VacationType>("exchange");
   const [earliestDate, setEarliestDate] = useState("");
   const [latestDate, setLatestDate] = useState("");
@@ -44,7 +45,7 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
   const [children, setChildren] = useState(0);
 
   const today = new Date().toISOString().split("T")[0];
-  const isExchange = vacationType === "exchange";
+  const isExchange = isDisney || vacationType === "exchange";
 
   // Validates the search, then hands off to the available-unit page for
   // this resort. Travel dates + guests are passed as a query string (the
@@ -84,12 +85,16 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
       return;
     }
 
+    const normalizedVacationType: VacationType = isDisney
+      ? "exchange"
+      : vacationType;
+
     const search: BookingSearch = {
       earliestDate,
       latestDate,
       adults,
       children,
-      vacationType,
+      vacationType: normalizedVacationType,
     };
 
     const query = new URLSearchParams({
@@ -100,36 +105,50 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
       vacationType: search.vacationType,
     });
 
-    router.push(`/resort-directory/${resort._id}/available-unit?${query.toString()}`);
+    router.push(
+      `/resort-directory/${resort._id}/available-unit?${query.toString()}`,
+    );
   };
+
+  const disneyPointsTiers = [
+    { unit: "Studio", price: "3,500" },
+    { unit: "1 Bedroom", price: "5,000" },
+  ];
 
   return (
     <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-lg p-4 md:p-6">
       {/* Exchange / Getaways toggle */}
-      <div className="flex justify-center mb-6">
-        <button
-          type="button"
-          onClick={() => setVacationType("exchange")}
-          className={`px-6 py-2.5 font-semibold text-sm rounded-l-md border-2 transition-all ${
-            isExchange
-              ? "bg-[#18294B] text-white border-[#18294B]"
-              : "border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
-          }`}
-        >
-          Exchange <span className="text-xs opacity-75">(Points)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setVacationType("getaways")}
-          className={`px-6 py-2.5 font-semibold text-sm rounded-r-md border-2 border-l-0 transition-all ${
-            !isExchange
-              ? "bg-[#0077be] text-white border-[#0077be]"
-              : "border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
-          }`}
-        >
-          Getaways <span className="text-xs opacity-75">(Cash)</span>
-        </button>
-      </div>
+      {!isDisney ? (
+        <div className="flex justify-center mb-6">
+          <button
+            type="button"
+            onClick={() => setVacationType("exchange")}
+            className={`px-6 py-2.5 font-semibold text-sm rounded-l-md border-2 transition-all ${
+              isExchange
+                ? "bg-[#18294B] text-white border-[#18294B]"
+                : "border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+            }`}
+          >
+            Exchange <span className="text-xs opacity-75">(Points)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setVacationType("getaways")}
+            className={`px-6 py-2.5 font-semibold text-sm rounded-r-md border-2 border-l-0 transition-all ${
+              !isExchange
+                ? "bg-[#0077be] text-white border-[#0077be]"
+                : "border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+            }`}
+          >
+            Getaways <span className="text-xs opacity-75">(Cash)</span>
+          </button>
+        </div>
+      ) : (
+        <div className="mb-6 rounded-md border border-[#18294B] bg-[#18294B]/5 px-4 py-3 text-center text-sm font-medium text-[#18294B] dark:text-[#7fb8e6]">
+          Disney resorts are points-only. Studio and 1 Bedroom are the available
+          unit types.
+        </div>
+      )}
 
       {/* Pricing summary for the selected option */}
       <div
@@ -140,15 +159,24 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
         }`}
       >
         <h2 className="text-lg font-bold text-white mb-1">
-          {isExchange ? "Exchange Vacation (Points)" : "Getaway Vacation (Cash)"}
+          {isExchange
+            ? "Exchange Vacation (Points)"
+            : "Getaway Vacation (Cash)"}
         </h2>
         <p className="text-sm text-gray-200">
-          {isExchange
-            ? "Book with points at our competitive rates."
-            : "Book with cash at our competitive Last Call rates."}
+          {isDisney
+            ? "Book Disney stays with points only, using the Disney-specific studio and 1-bedroom pricing."
+            : isExchange
+              ? "Book with points at our competitive rates."
+              : "Book with cash at our competitive Last Call rates."}
         </p>
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-          {(isExchange ? POINTS_TIERS : CASH_TIERS).map((tier) => (
+          {(isDisney
+            ? disneyPointsTiers
+            : isExchange
+              ? POINTS_TIERS
+              : CASH_TIERS
+          ).map((tier) => (
             <div
               key={tier.unit}
               className={`bg-white rounded p-2 text-center border ${
@@ -169,9 +197,11 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
           ))}
         </div>
         <p className="text-xs text-gray-200 mt-2">
-          {isExchange
-            ? "* Final points will be calculated based on the total number of nights selected."
-            : "* Prices shown before tax."}
+          {isDisney
+            ? "* Disney resorts show points pricing only; cash is not displayed for these properties."
+            : isExchange
+              ? "* Final points will be calculated based on the total number of nights selected."
+              : "* Prices shown before tax."}
         </p>
       </div>
 

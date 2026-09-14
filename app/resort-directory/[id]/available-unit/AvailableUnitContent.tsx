@@ -1,24 +1,30 @@
 "use client";
 
+import ResortImage from "@/components/resorts/ResortImage";
 import { saveBookingDraft } from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import {
   CASH_PRICE_PER_NIGHT,
+  getAvailableUnitTypes,
   getCashTotal,
   getNights,
+  getPointsPerNight,
   getPointsTotal,
-  POINTS_PER_NIGHT,
   UNIT_SLEEPS,
-  UNIT_TYPES,
   type BookingSearch,
   type UnitType,
   type VacationType,
 } from "@/lib/types/booking";
-import { getResortName, type Resort } from "@/lib/types/resort";
-import ResortImage from "@/components/resorts/ResortImage";
+import { getResortName, isDisneyResort, type Resort } from "@/lib/types/resort";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FaBed, FaCheckCircle, FaMapMarkerAlt, FaMedal, FaUtensils } from "react-icons/fa";
+import {
+  FaBed,
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaMedal,
+  FaUtensils,
+} from "react-icons/fa";
 
 interface AvailableUnitContentProps {
   resort: Resort;
@@ -30,7 +36,8 @@ interface AvailableUnitContentProps {
 const parseSearch = (searchParams: URLSearchParams): BookingSearch => {
   const today = new Date().toISOString().split("T")[0];
   const vacationTypeParam = searchParams.get("vacationType");
-  const vacationType: VacationType = vacationTypeParam === "getaways" ? "getaways" : "exchange";
+  const vacationType: VacationType =
+    vacationTypeParam === "getaways" ? "getaways" : "exchange";
 
   return {
     earliestDate: searchParams.get("earliestDate") || today,
@@ -45,19 +52,28 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const search = parseSearch(searchParams);
-  const isExchange = search.vacationType === "exchange";
+  const isDisney = isDisneyResort(resort);
+  const isExchange = isDisney || search.vacationType === "exchange";
   const nights = getNights(search.earliestDate, search.latestDate);
   const resortName = getResortName(resort);
+  const availableUnitTypes = getAvailableUnitTypes(resort);
 
   const handleSelectUnit = (unitType: UnitType) => {
+    const bookingSearch = {
+      ...search,
+      vacationType: isDisney ? "exchange" : search.vacationType,
+    };
+
     saveBookingDraft({
       resort,
-      search,
+      search: bookingSearch,
       unitType,
       nights,
       checkInAs: "Member",
       cashSubtotal: !isExchange ? getCashTotal(unitType, nights) : undefined,
-      totalPoints: isExchange ? getPointsTotal(unitType, nights) : undefined,
+      totalPoints: isExchange
+        ? getPointsTotal(unitType, nights, resort)
+        : undefined,
     });
     router.push("/checkout");
   };
@@ -91,7 +107,11 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
         >
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/10 rounded-xl">
-              {isExchange ? <FaMedal className="w-7 h-7" /> : <FaUtensils className="w-7 h-7" />}
+              {isExchange ? (
+                <FaMedal className="w-7 h-7" />
+              ) : (
+                <FaUtensils className="w-7 h-7" />
+              )}
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -121,19 +141,25 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
               <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                 Check-in
               </p>
-              <p className="font-bold text-gray-800 dark:text-white mt-1">{formattedCheckIn}</p>
+              <p className="font-bold text-gray-800 dark:text-white mt-1">
+                {formattedCheckIn}
+              </p>
             </div>
             <div className="bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl p-4">
               <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                 Check-out
               </p>
-              <p className="font-bold text-gray-800 dark:text-white mt-1">{formattedCheckOut}</p>
+              <p className="font-bold text-gray-800 dark:text-white mt-1">
+                {formattedCheckOut}
+              </p>
             </div>
             <div className="bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl p-4">
               <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                 Duration
               </p>
-              <p className="font-bold text-gray-800 dark:text-white mt-1">{nights} Nights</p>
+              <p className="font-bold text-gray-800 dark:text-white mt-1">
+                {nights} Nights
+              </p>
             </div>
             <div className="bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl p-4">
               <p className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">
@@ -186,7 +212,7 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
           Select Available Unit
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {UNIT_TYPES.map((unitType) => (
+          {availableUnitTypes.map((unitType) => (
             <div
               key={unitType}
               className="group border-2 border-white dark:border-white/10 bg-white dark:bg-[#16223d] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:border-gray-200 dark:hover:border-white/20 transition-all duration-300"
@@ -204,14 +230,18 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
                   {isExchange ? (
                     <>
                       <p className="text-3xl font-black text-[#18294B] dark:text-[#7fb8e6]">
-                        {getPointsTotal(unitType, nights).toLocaleString()}
+                        {getPointsTotal(
+                          unitType,
+                          nights,
+                          resort,
+                        ).toLocaleString()}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest mt-1">
                         total points
                       </p>
                       <div className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 rounded-lg p-3 border border-gray-100 dark:border-white/10">
                         <span className="font-bold text-[#18294B] dark:text-[#7fb8e6]">
-                          {POINTS_PER_NIGHT[unitType].toLocaleString()}
+                          {getPointsPerNight(unitType, resort).toLocaleString()}
                         </span>{" "}
                         pts/night &times; {nights} nights
                       </div>
