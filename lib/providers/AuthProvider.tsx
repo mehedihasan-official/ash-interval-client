@@ -4,6 +4,10 @@
 // (login, Google login, create profile, sign out) to the whole app.
 import { syncUserWithBackend } from "@/lib/api/users";
 import {
+  isAuthorizedUserEmail,
+  unauthorizedUserMessage,
+} from "@/lib/auth/access";
+import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -59,6 +63,28 @@ const requireAuth = () => {
   return auth;
 };
 
+const authorizeFirebaseUser = async (currentUser: User) => {
+  if (!currentUser.email) {
+    throw new Error(unauthorizedUserMessage);
+  }
+
+  try {
+    const backendUser = await syncUserWithBackend({
+      name: currentUser.displayName ?? "",
+      email: currentUser.email,
+    });
+
+    if (!backendUser.isAdmin && !isAuthorizedUserEmail(currentUser.email)) {
+      throw new Error(unauthorizedUserMessage);
+    }
+
+    return backendUser;
+  } catch (error) {
+    await firebaseSignOut(requireAuth());
+    throw error;
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
@@ -68,6 +94,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     const currentAuth = requireAuth();
     await signInWithEmailAndPassword(currentAuth, email, password);
+    const currentUser = currentAuth.currentUser;
+    if (!currentUser) {
+      throw new Error("Could not complete sign in. Please try again.");
+    }
+    await authorizeFirebaseUser(currentUser);
   };
 
   // Log in (or sign up, Firebase treats both the same way) with Google.
@@ -75,12 +106,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const currentAuth = requireAuth();
     const provider = new GoogleAuthProvider();
     await signInWithPopup(currentAuth, provider);
+    const currentUser = currentAuth.currentUser;
+    if (!currentUser) {
+      throw new Error("Could not complete sign in. Please try again.");
+    }
+    await authorizeFirebaseUser(currentUser);
   };
 
   // Create a new profile using email/password, then store the display name
   // as the chosen userID so it shows up in Firebase's user record.
   const createProfile = async (data: ProfileData) => {
     try {
+      if (!isAuthorizedUserEmail(data.email)) {
+        throw new Error(unauthorizedUserMessage);
+      }
+
       const currentAuth = requireAuth();
       const result = await createUserWithEmailAndPassword(
         currentAuth,
@@ -114,28 +154,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       const syncAndSetAuthState = async () => {
-        setUser(currentUser);
-
         if (currentUser?.email) {
           // Default to "user" immediately so role is never left stuck on
           // the previous session's value while the backend sync below is
           // still in flight; it's upgraded to "admin" if the synced record
           // says so.
-          setRole("user");
           try {
-            const backendUser = await syncUserWithBackend({
-              name: currentUser.displayName ?? "",
-              email: currentUser.email,
-            });
+            const backendUser = await authorizeFirebaseUser(currentUser);
+            setUser(currentUser);
             setRole(backendUser.isAdmin ? "admin" : "user");
           } catch (error) {
-            // Firebase auth should remain usable if the API is temporarily down.
-            console.error(
-              "Could not sync authenticated user with backend:",
-              error,
-            );
+            setUser(null);
+            setRole(null);
+            console.error("Could not authorize authenticated user:", error);
           }
         } else {
+          setUser(null);
           setRole(null);
         }
 
