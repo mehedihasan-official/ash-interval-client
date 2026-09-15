@@ -3,7 +3,7 @@
 // The airport autocomplete used by the flight search form. Debounces
 // keystrokes into a call against GET /api/airports so the huge
 // ~800-airport dataset never has to ship to the client; the server
-// returns just the handful of best matches for what the member typed.
+// returns only the matching airports for what the member typed.
 import { searchAirports } from "@/lib/api/flights";
 import type { Airport } from "@/lib/types/flight";
 import { useEffect, useRef, useState } from "react";
@@ -58,7 +58,7 @@ const AirportAutocomplete = ({
     setIsLoading(true);
     const timer = window.setTimeout(async () => {
       try {
-        const airports = await searchAirports(trimmed, 8);
+        const airports = await searchAirports(trimmed, 100);
         if (!cancelled) setSuggestions(airports);
       } catch {
         if (!cancelled) setSuggestions([]);
@@ -128,10 +128,15 @@ const AirportAutocomplete = ({
                 className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-white/5 border-b border-gray-100 dark:border-white/5 last:border-0"
               >
                 <div className="font-semibold text-gray-800 dark:text-white">
-                  {airport.code} &mdash; {airport.city}
+                  {airport.city}
+                  {airport.state ? `, ${airport.state}` : ""}
+                  <span className="ml-2 text-[#0077be] dark:text-[#7cc8ff]">
+                    ({airport.code})
+                  </span>
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                <div className="text-xs text-gray-600 dark:text-gray-400">
                   {airport.name}
+                  {airport.stateCode ? ` - ${airport.stateCode}` : ""}
                 </div>
               </button>
             ))

@@ -67,12 +67,12 @@ async function apiFetch<T>(
 
 /**
  * Look up airports for the autocomplete on the search form. The server
- * matches on IATA code, city, and airport name, so a member typing
- * "new" gets both New York (JFK/LGA) and Newark (EWR).
+ * matches on IATA code, city, airport name, state/province, and
+ * state/province code, so a member can type either "Syracuse" or "HI".
  */
 export async function searchAirports(
   search: string,
-  limit = 10,
+  limit = 100,
 ): Promise<Airport[]> {
   const query = new URLSearchParams({ search, limit: String(limit) });
   const result = await apiFetch<Airport[]>(`/airports?${query.toString()}`);
@@ -109,8 +109,10 @@ export async function searchFlights(
   if (params.airline) query.set("airline", params.airline);
   if (params.stops) query.set("stops", params.stops);
   if (params.refundable) query.set("refundable", "true");
-  if (params.minPrice !== undefined) query.set("minPrice", String(params.minPrice));
-  if (params.maxPrice !== undefined) query.set("maxPrice", String(params.maxPrice));
+  if (params.minPrice !== undefined)
+    query.set("minPrice", String(params.minPrice));
+  if (params.maxPrice !== undefined)
+    query.set("maxPrice", String(params.maxPrice));
 
   const qs = query.toString();
   const result = await apiFetch<FlightSearchResult>(
@@ -118,7 +120,9 @@ export async function searchFlights(
   );
 
   if (!result) {
-    throw new Error("Unexpected response from the server while searching flights.");
+    throw new Error(
+      "Unexpected response from the server while searching flights.",
+    );
   }
   return result;
 }

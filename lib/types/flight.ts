@@ -9,6 +9,8 @@ export interface Airport {
   city: string;
   name: string;
   country: string;
+  state?: string;
+  stateCode?: string;
 }
 
 export type CabinClass =
