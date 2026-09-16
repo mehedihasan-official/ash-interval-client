@@ -4,14 +4,14 @@
 // plus a mobile slide-out menu. Colors match the reference brand theme:
 // navy (#18294B) for nav bars, blue (#0077be / #1a6fa8) for links/buttons,
 // with dark-mode equivalents so text/backgrounds stay readable either way.
-import { useState } from "react";
+import { useAuth } from "@/lib/providers/AuthProvider";
+import headerBanner from "@/public/desktop-header-part.png";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { FaBars } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
-import { useAuth } from "@/lib/providers/AuthProvider";
-import headerBanner from "@/public/desktop-header-part.png";
 import ThemeToggle from "./ThemeToggle";
 
 // Nav items shown once a regular (non-admin) user is logged in, in
@@ -49,7 +49,7 @@ const mobilePreLoginItems = [
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -70,7 +70,14 @@ const Header = () => {
     }
   };
 
-  const loggedInMobileItems = user ? userMenuItems : mobilePreLoginItems;
+  const loggedInMobileItems = user
+    ? userMenuItems.filter(
+        (item) => item.name !== "History" || role === "admin",
+      )
+    : mobilePreLoginItems;
+  const visibleUserMenuItems = userMenuItems.filter(
+    (item) => item.name !== "History" || role === "admin",
+  );
 
   return (
     <>
@@ -129,7 +136,9 @@ const Header = () => {
         {user && (
           <div className="hidden md:flex items-center justify-between px-4 py-4 max-w-245 mx-auto">
             <Link href="/dashboard">
-              <span className="text-2xl font-bold text-[#18294B] dark:text-white">Interval</span>
+              <span className="text-2xl font-bold text-[#18294B] dark:text-white">
+                Interval
+              </span>
             </Link>
             <div className="flex items-center gap-3">
               <button
@@ -152,7 +161,7 @@ const Header = () => {
               scroll almost never kicks in. */}
           <div className="max-w-245 mx-auto w-full flex overflow-x-auto">
             {user
-              ? userMenuItems.map((item) => (
+              ? visibleUserMenuItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.path}
@@ -177,12 +186,16 @@ const Header = () => {
 
         {/* Mobile header bar */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18294B] dark:bg-[#101b30]">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-baseline gap-1.5">
+          <Link
+            href={user ? "/dashboard" : "/"}
+            className="flex items-baseline gap-1.5"
+          >
             <span className="text-white text-lg font-bold lowercase tracking-tight">
               interval
             </span>
             <span className="text-white text-xs font-semibold flex items-baseline gap-0.5">
-              5<span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-white" />
+              5
+              <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-white" />
             </span>
             <span className="text-white/80 text-[10px] font-medium tracking-wide">
               YEARS
@@ -214,9 +227,23 @@ const Header = () => {
       >
         <div className="bg-[#18294B] dark:bg-[#101b30] p-5 flex justify-between items-center">
           <span className="text-white font-bold text-lg">Interval</span>
-          <button onClick={closeMenu} className="text-white" aria-label="Close menu">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          <button
+            onClick={closeMenu}
+            className="text-white"
+            aria-label="Close menu"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -228,7 +255,9 @@ const Header = () => {
               key={item.name}
               onClick={closeMenu}
               className={`px-5 py-3.5 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-white/5 flex justify-between items-center border-b border-gray-100 dark:border-white/10 text-sm ${
-                pathname === item.path ? "bg-blue-50 dark:bg-white/10 text-[#1a6fa8] dark:text-[#7fb8e6] font-medium" : ""
+                pathname === item.path
+                  ? "bg-blue-50 dark:bg-white/10 text-[#1a6fa8] dark:text-[#7fb8e6] font-medium"
+                  : ""
               }`}
             >
               <span>{item.name}</span>

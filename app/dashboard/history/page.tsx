@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const HistoryPage = () => {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const router = useRouter();
 
   // Same guard the rest of the members-only pages use: wait for auth to
@@ -18,10 +18,14 @@ const HistoryPage = () => {
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
+      return;
     }
-  }, [loading, user, router]);
+    if (!loading && user && role && role !== "admin") {
+      router.replace("/dashboard");
+    }
+  }, [loading, user, role, router]);
 
-  if (loading || !user) {
+  if (loading || !user || role !== "admin") {
     return <Loading />;
   }
 

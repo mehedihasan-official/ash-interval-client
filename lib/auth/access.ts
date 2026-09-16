@@ -1,6 +1,8 @@
 const defaultAuthorizedUserEmails = [
   "ashorangelake@gmail.com",
   "ocampojenis333@gmail.com",
+  "brian.caceres001@gmail.com",
+  "skmehedihasan.jr1@gmail.com",
 ];
 
 const configuredAuthorizedUserEmails = (

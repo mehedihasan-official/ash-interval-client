@@ -162,7 +162,9 @@ const DashboardPage = () => {
                 <FaPlane className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-gray-800 dark:text-white">Flights</p>
+                <p className="font-bold text-gray-800 dark:text-white">
+                  Flights
+                </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Book with member savings
                 </p>
@@ -198,7 +200,9 @@ const DashboardPage = () => {
                 <FaShip className="text-[#0077be] dark:text-[#7fb8e6] w-5 h-5" />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-gray-800 dark:text-white">Cruises</p>
+                <p className="font-bold text-gray-800 dark:text-white">
+                  Cruises
+                </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Member savings on cabins
                 </p>
@@ -216,7 +220,6 @@ const DashboardPage = () => {
             role === "admin" ? "lg:grid-cols-8" : "lg:grid-cols-7"
           }`}
         >
-          
           <Link
             href="/resort-directory"
             className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md hover:border-[#0077be]/30 dark:hover:border-white/20 transition"
@@ -296,8 +299,7 @@ const DashboardPage = () => {
             </span>
           </div>
 
-          
-               {role === "admin" && (
+          {role === "admin" && (
             <Link
               href="/dashboard/admin"
               className="bg-[#18294B] dark:bg-[#101b30] border border-[#18294B] dark:border-white/10 rounded-xl p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition"
@@ -314,13 +316,15 @@ const DashboardPage = () => {
             three cards of what's next told a member less than the full
             record of what they've booked across all four products, and
             this is the view the reference site leads with. */}
-        <div className="mb-10">
-          <BookingHistory
-            email={user.email}
-            limit={3}
-            viewAllHref="/dashboard/history"
-          />
-        </div>
+        {role === "admin" && (
+          <div className="mb-10">
+            <BookingHistory
+              email={user.email}
+              limit={3}
+              viewAllHref="/dashboard/history"
+            />
+          </div>
+        )}
 
         {/* Explore more resorts */}
       </div>
