@@ -7,11 +7,13 @@
 // page, which is where an actual unit gets picked.
 import { useAuth } from "@/lib/providers/AuthProvider";
 import type { BookingSearch } from "@/lib/types/booking";
+import { getCashPricePerNight, getPointsPerNight } from "@/lib/types/booking";
 import {
+  getResortUnitLabel,
+  getResortUnitPricing,
   isDisneyResort,
   type Resort,
 } from "@/lib/types/resort";
-import { getAvailableUnitTypes, getCashPricePerNight, getPointsPerNight } from "@/lib/types/booking";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
@@ -34,11 +36,11 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
 
   const today = new Date().toISOString().split("T")[0];
   const isExchange = isDisney || vacationType === "exchange";
-  const pricingTiers = getAvailableUnitTypes(resort).map((unitType) => ({
-    unit: unitType,
+  const pricingTiers = getResortUnitPricing(resort).map((unit) => ({
+    ...unit,
     price: isExchange
-      ? `${getPointsPerNight(unitType, resort).toLocaleString()} pts/night`
-      : `$${getCashPricePerNight(unitType, resort).toLocaleString()}/night`,
+      ? `${getPointsPerNight(unit.unitType, resort).toLocaleString()} pts/night`
+      : `$${getCashPricePerNight(unit.unitType, resort).toLocaleString()}/night`,
   }));
 
   // Validates the search, then hands off to the available-unit page for
@@ -162,7 +164,7 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
           {pricingTiers.map((tier) => (
             <div
-              key={tier.unit}
+              key={tier.unitType}
               className={`bg-white rounded p-2 text-center border ${
                 isExchange ? "border-[#18294B]" : "border-[#0077be]"
               }`}
@@ -170,12 +172,16 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
               <p
                 className={`font-semibold ${isExchange ? "text-[#18294B]" : "text-[#0077be]"}`}
               >
-                {tier.unit}
+                {getResortUnitLabel(tier)}
               </p>
               <p
                 className={`font-bold ${isExchange ? "text-[#18294B]" : "text-[#0077be]"}`}
               >
                 {tier.price}
+              </p>
+              <p className="text-[10px] text-gray-500 mt-1">
+                {tier.availableUnits} available · {tier.beds}{" "}
+                {tier.beds === 1 ? "bed" : "beds"}
               </p>
             </div>
           ))}

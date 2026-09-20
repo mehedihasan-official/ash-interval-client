@@ -4,8 +4,8 @@ import ResortImage from "@/components/resorts/ResortImage";
 import { saveBookingDraft } from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import {
-  getCashPricePerNight,
   getAvailableUnitTypes,
+  getCashPricePerNight,
   getCashTotal,
   getNights,
   getPointsPerNight,
@@ -15,7 +15,13 @@ import {
   type UnitType,
   type VacationType,
 } from "@/lib/types/booking";
-import { getResortName, isDisneyResort, type Resort } from "@/lib/types/resort";
+import {
+  getResortName,
+  getResortUnitLabel,
+  getResortUnitPricing,
+  isDisneyResort,
+  type Resort,
+} from "@/lib/types/resort";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -57,13 +63,14 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
   const nights = getNights(search.earliestDate, search.latestDate);
   const resortName = getResortName(resort);
   const availableUnitTypes = getAvailableUnitTypes(resort);
-  const configuredUnitTypes = resort.unitPricing?.length
-    ? availableUnitTypes.filter((unitType) =>
-        resort.unitPricing?.some(
-          (unit) => unit.unitType === unitType && unit.availableUnits > 0,
-        ),
-      )
-    : availableUnitTypes;
+  const configuredUnitTypes = availableUnitTypes;
+
+  const getUnitLabel = (unitType: UnitType) => {
+    const unit = getResortUnitPricing(resort).find(
+      (configuredUnit) => configuredUnit.unitType === unitType,
+    );
+    return unit ? getResortUnitLabel(unit) : unitType;
+  };
 
   const handleSelectUnit = (unitType: UnitType) => {
     const bookingSearch = {
@@ -77,7 +84,9 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
       unitType,
       nights,
       checkInAs: "Member",
-      cashSubtotal: !isExchange ? getCashTotal(unitType, nights, resort) : undefined,
+      cashSubtotal: !isExchange
+        ? getCashTotal(unitType, nights, resort)
+        : undefined,
       totalPoints: isExchange
         ? getPointsTotal(unitType, nights, resort)
         : undefined,
@@ -229,7 +238,7 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
                   isExchange ? "bg-[#18294B]" : "bg-[#0077be]"
                 }`}
               >
-                {unitType}
+                {getUnitLabel(unitType)}
               </div>
 
               <div className="p-6">
@@ -256,7 +265,12 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
                   ) : (
                     <>
                       <p className="text-3xl font-black text-[#0077be] dark:text-[#7fb8e6]">
-                        ${getCashTotal(unitType, nights, resort).toLocaleString()}
+                        $
+                        {getCashTotal(
+                          unitType,
+                          nights,
+                          resort,
+                        ).toLocaleString()}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest mt-1">
                         total price

@@ -2,7 +2,12 @@
 // checkout -> payment -> confirmation). Pricing here mirrors the tiers shown
 // on the resort page's Exchange/Getaways panel so the numbers a visitor sees
 // while browsing stay consistent all the way through checkout.
-import { isDisneyResort, type Resort, type ResortUnitType } from "@/lib/types/resort";
+import {
+  getResortUnitPricing,
+  isDisneyResort,
+  type Resort,
+  type ResortUnitType,
+} from "@/lib/types/resort";
 
 export type VacationType = "exchange" | "getaways";
 
@@ -18,16 +23,20 @@ export const UNIT_TYPES: UnitType[] = [
 
 export const DISNEY_UNIT_TYPES: UnitType[] = ["Studio", "1 Bedroom"];
 
-export const getAvailableUnitTypes = (resort?: Resort | null): UnitType[] =>
-  resort?.unitPricing?.length
-    ? UNIT_TYPES.filter((unitType) => {
-        const configured = resort.unitPricing?.find((unit) => unit.unitType === unitType);
-        return Boolean(configured && configured.availableUnits > 0) &&
-          (!isDisneyResort(resort) || DISNEY_UNIT_TYPES.includes(unitType as "Studio" | "1 Bedroom"));
-      })
-    : isDisneyResort(resort)
-      ? DISNEY_UNIT_TYPES
-      : UNIT_TYPES;
+export const getAvailableUnitTypes = (resort?: Resort | null): UnitType[] => {
+  if (!resort?.unitPricing?.length) {
+    return isDisneyResort(resort) ? DISNEY_UNIT_TYPES : UNIT_TYPES;
+  }
+
+  return getResortUnitPricing(resort)
+    .filter(
+      (unit) =>
+        unit.availableUnits > 0 &&
+        (!isDisneyResort(resort) ||
+          DISNEY_UNIT_TYPES.includes(unit.unitType as "Studio" | "1 Bedroom")),
+    )
+    .map((unit) => unit.unitType);
+};
 
 // Roughly how many guests each unit type comfortably sleeps — shown on the
 // unit cards so a member can judge fit before picking a size.
@@ -58,8 +67,12 @@ export const getPointsPerNight = (
   unitType: UnitType,
   resort?: Resort | null,
 ): number => {
-  const configured = resort?.unitPricing?.find((unit) => unit.unitType === unitType);
-  if (typeof configured?.pointsPerNight === "number") return configured.pointsPerNight;
+  const configured = resort?.unitPricing?.find(
+    (unit) => unit.unitType === unitType,
+  );
+  if (typeof configured?.pointsPerNight === "number") {
+    return configured.pointsPerNight;
+  }
 
   if (isDisneyResort(resort)) {
     const disneyPrice =
@@ -83,8 +96,10 @@ export const getCashPricePerNight = (
   unitType: UnitType,
   resort?: Resort | null,
 ): number => {
-  const configured = resort?.unitPricing?.find((unit) => unit.unitType === unitType);
-  return configured?.cashPerNight ?? CASH_PRICE_PER_NIGHT[unitType];
+  return (
+    getResortUnitPricing(resort).find((unit) => unit.unitType === unitType)
+      ?.cashPerNight ?? CASH_PRICE_PER_NIGHT[unitType]
+  );
 };
 
 // Flat tax + fees applied to a cash (Getaways) booking at checkout.
@@ -132,8 +147,11 @@ export const getNights = (earliestDate: string, latestDate: string): number => {
   return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 };
 
-export const getCashTotal = (unitType: UnitType, nights: number, resort?: Resort | null) =>
-  getCashPricePerNight(unitType, resort) * nights;
+export const getCashTotal = (
+  unitType: UnitType,
+  nights: number,
+  resort?: Resort | null,
+) => getCashPricePerNight(unitType, resort) * nights;
 
 export const getPointsTotal = (
   unitType: UnitType,
@@ -142,5 +160,8 @@ export const getPointsTotal = (
 ) => getPointsPerNight(unitType, resort) * nights;
 
 // Cash bookings show a tax-inclusive total at checkout/payment.
-export const getCashTotalWithTax = (unitType: UnitType, nights: number, resort?: Resort | null) =>
-  getCashTotal(unitType, nights, resort) + CASH_TAXES_AND_FEES;
+export const getCashTotalWithTax = (
+  unitType: UnitType,
+  nights: number,
+  resort?: Resort | null,
+) => getCashTotal(unitType, nights, resort) + CASH_TAXES_AND_FEES;

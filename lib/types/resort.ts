@@ -36,12 +36,7 @@ export interface Resort {
   [key: string]: unknown;
 }
 
-export type ResortUnitType =
-  | "Studio"
-  | "1 Bedroom"
-  | "2 Bedroom"
-  | "3 Bedroom"
-  | "4+ Bedroom";
+export type ResortUnitType = string;
 
 export interface ResortUnitPricing {
   unitType: ResortUnitType;
@@ -68,6 +63,56 @@ export const DEFAULT_UNIT_PRICING: ResortUnitPricing[] = RESORT_UNIT_TYPES.map(
     cashPerNight: [50, 60, 72, 80, 100][index],
   }),
 );
+
+/**
+ * Returns the unit pricing stored on a resort, using the frontend values only
+ * for unit types or numeric fields that the database did not provide.
+ */
+export const getResortUnitPricing = (
+  resort?: Pick<Resort, "unitPricing"> | null,
+): ResortUnitPricing[] => {
+  const configured = new Map(
+    (resort?.unitPricing ?? [])
+      .filter(
+        (unit): unit is ResortUnitPricing =>
+          typeof unit?.unitType === "string" && unit.unitType.trim().length > 0,
+      )
+      .map((unit) => [unit.unitType, unit]),
+  );
+
+  const defaultUnits = DEFAULT_UNIT_PRICING.map((fallback) => {
+    const unit = configured.get(fallback.unitType);
+    return {
+      unitType: fallback.unitType,
+      availableUnits:
+        typeof unit?.availableUnits === "number"
+          ? unit.availableUnits
+          : fallback.availableUnits,
+      beds: typeof unit?.beds === "number" ? unit.beds : fallback.beds,
+      pointsPerNight:
+        typeof unit?.pointsPerNight === "number"
+          ? unit.pointsPerNight
+          : fallback.pointsPerNight,
+      cashPerNight:
+        typeof unit?.cashPerNight === "number"
+          ? unit.cashPerNight
+          : fallback.cashPerNight,
+    };
+  });
+
+  const customUnits = [...configured.values()].filter(
+    (unit) => !RESORT_UNIT_TYPES.includes(unit.unitType),
+  );
+
+  return resort?.unitPricing?.length
+    ? [...defaultUnits, ...customUnits]
+    : defaultUnits;
+};
+
+export const getResortUnitLabel = (unit: ResortUnitPricing): string => {
+  if (unit.unitType === "Studio") return "Studio";
+  return unit.beds > 0 ? `${unit.beds} Bedroom` : unit.unitType;
+};
 
 export interface ResortPagination {
   page: number;
