@@ -8,7 +8,11 @@
 // unit was just picked on the available-unit page.
 import BookingSteps from "@/components/resorts/BookingSteps";
 import ResortImage from "@/components/resorts/ResortImage";
-import { clearBookingDraft, loadBookingDraft, saveBookingDraft } from "@/lib/bookingDraft";
+import {
+  clearBookingDraft,
+  loadBookingDraft,
+  saveBookingDraft,
+} from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import { useAuth } from "@/lib/providers/AuthProvider";
 import {
@@ -20,7 +24,13 @@ import { getResortName } from "@/lib/types/resort";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaMapMarkerAlt, FaMedal, FaUser, FaUserFriends, FaUtensils } from "react-icons/fa";
+import {
+  FaMapMarkerAlt,
+  FaMedal,
+  FaUser,
+  FaUserFriends,
+  FaUtensils,
+} from "react-icons/fa";
 import Swal from "sweetalert2";
 
 const CheckoutPage = () => {
@@ -29,7 +39,9 @@ const CheckoutPage = () => {
   // Booking drafts only exist in the browser (sessionStorage), so this is
   // read via a lazy initializer — it runs during the client's first render
   // rather than needing a separate effect + extra re-render to populate it.
-  const [draft, setDraft] = useState<BookingDraft | null>(() => loadBookingDraft());
+  const [draft, setDraft] = useState<BookingDraft | null>(() =>
+    loadBookingDraft(),
+  );
 
   if (!draft) {
     return (
@@ -39,8 +51,8 @@ const CheckoutPage = () => {
             No Booking In Progress
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            We couldn&apos;t find a unit selection to check out. Please start your search again
-            from a resort page.
+            We couldn&apos;t find a unit selection to check out. Please start
+            your search again from a resort page.
           </p>
           <Link
             href="/resort-directory"
@@ -53,10 +65,20 @@ const CheckoutPage = () => {
     );
   }
 
-  const { resort, search, unitType, nights, cashSubtotal, totalPoints, checkInAs } = draft;
+  const {
+    resort,
+    search,
+    unitType,
+    nights,
+    cashSubtotal,
+    totalPoints,
+    checkInAs,
+  } = draft;
   const isPoints = search.vacationType === "exchange";
   const resortName = getResortName(resort);
-  const cashTotalWithTax = !isPoints ? getCashTotalWithTax(unitType, nights) : 0;
+  const cashTotalWithTax = !isPoints
+    ? getCashTotalWithTax(unitType, nights, resort)
+    : 0;
 
   const handleCheckInAsChange = (value: "Member" | "Guest") => {
     const updated: BookingDraft = { ...draft, checkInAs: value };
@@ -110,7 +132,9 @@ const CheckoutPage = () => {
             </div>
             <div>
               <h2 className="font-bold text-gray-800 dark:text-white">
-                {isPoints ? "Points Exchange Booking" : "Getaway Vacation Booking"}
+                {isPoints
+                  ? "Points Exchange Booking"
+                  : "Getaway Vacation Booking"}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 {isPoints
@@ -133,7 +157,9 @@ const CheckoutPage = () => {
               />
             </div>
             <div className="p-4 grow">
-              <h3 className="text-lg font-bold text-[#18294B] dark:text-white">{resortName}</h3>
+              <h3 className="text-lg font-bold text-[#18294B] dark:text-white">
+                {resortName}
+              </h3>
               {resort.location && (
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-3 flex items-center gap-1.5">
                   <FaMapMarkerAlt className="shrink-0" />
@@ -162,14 +188,18 @@ const CheckoutPage = () => {
           {/* Cost summary */}
           <div
             className={`p-4 border-t border-gray-100 dark:border-white/10 ${
-              isPoints ? "bg-blue-50 dark:bg-white/5" : "bg-blue-50/50 dark:bg-white/5"
+              isPoints
+                ? "bg-blue-50 dark:bg-white/5"
+                : "bg-blue-50/50 dark:bg-white/5"
             }`}
           >
             {isPoints ? (
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-gray-600 dark:text-gray-300">
                   <span>Total points required</span>
-                  <span className="font-semibold">{totalPoints?.toLocaleString()} pts</span>
+                  <span className="font-semibold">
+                    {totalPoints?.toLocaleString()} pts
+                  </span>
                 </div>
                 <div className="flex justify-between font-bold text-base border-t border-gray-200 dark:border-white/10 pt-2 mt-2">
                   <span className="text-gray-800 dark:text-white">Total</span>
@@ -181,15 +211,22 @@ const CheckoutPage = () => {
             ) : (
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-gray-600 dark:text-gray-300">
-                  <span>Base price (${(cashSubtotal ?? 0) / nights} &times; {nights} nights)</span>
-                  <span className="font-semibold">${(cashSubtotal ?? 0).toFixed(2)}</span>
+                  <span>
+                    Base price (${(cashSubtotal ?? 0) / nights} &times; {nights}{" "}
+                    nights)
+                  </span>
+                  <span className="font-semibold">
+                    ${(cashSubtotal ?? 0).toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-gray-600 dark:text-gray-300">
                   <span>Tax &amp; Fees</span>
                   <span>${CASH_TAXES_AND_FEES.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-base border-t border-gray-200 dark:border-white/10 pt-2 mt-2">
-                  <span className="text-gray-800 dark:text-white">Total (tax inclusive)</span>
+                  <span className="text-gray-800 dark:text-white">
+                    Total (tax inclusive)
+                  </span>
                   <span className="text-[#0077be] dark:text-[#7fb8e6]">
                     ${cashTotalWithTax.toFixed(2)} USD
                   </span>
@@ -233,15 +270,20 @@ const CheckoutPage = () => {
         {/* Bottom bar */}
         <div className="sticky bottom-0 bg-white dark:bg-[#16223d] border-t border-gray-200 dark:border-white/10 shadow-lg p-4 -mx-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-t-xl sm:rounded-none">
           <div className="text-center sm:text-left">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Total amount</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Total amount
+            </p>
             {isPoints ? (
               <p className="text-xl font-bold text-[#18294B] dark:text-[#7fb8e6]">
-                {totalPoints?.toLocaleString()} <span className="text-sm">points</span>
+                {totalPoints?.toLocaleString()}{" "}
+                <span className="text-sm">points</span>
               </p>
             ) : (
               <p className="text-xl font-bold text-[#0077be] dark:text-[#7fb8e6]">
                 ${cashTotalWithTax.toFixed(2)}{" "}
-                <span className="text-sm text-gray-500 dark:text-gray-400">USD</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  USD
+                </span>
               </p>
             )}
           </div>
@@ -249,7 +291,9 @@ const CheckoutPage = () => {
             type="button"
             onClick={handleContinue}
             className={`w-full sm:w-auto px-8 py-3 rounded-xl font-bold text-white transition-colors ${
-              isPoints ? "bg-[#18294B] hover:bg-[#0f1d35]" : "bg-[#0077be] hover:bg-[#005a8e]"
+              isPoints
+                ? "bg-[#18294B] hover:bg-[#0f1d35]"
+                : "bg-[#0077be] hover:bg-[#005a8e]"
             }`}
           >
             {isPoints ? "Continue to Redeem Points" : "Continue to Payment"}

@@ -9,7 +9,11 @@ import { createBooking } from "@/lib/api/bookings";
 import { loadBookingDraft, saveBookingDraft } from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import { useAuth } from "@/lib/providers/AuthProvider";
-import { getCashTotalWithTax, type BillingInfo, type BookingDraft } from "@/lib/types/booking";
+import {
+  getCashTotalWithTax,
+  type BillingInfo,
+  type BookingDraft,
+} from "@/lib/types/booking";
 import { getResortName } from "@/lib/types/resort";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,11 +33,19 @@ const EMPTY_BILLING: BillingInfo = {
   phoneNumber: "",
 };
 
-const BILLING_FIELDS: Array<{ name: keyof BillingInfo; placeholder: string; required: boolean }> = [
+const BILLING_FIELDS: Array<{
+  name: keyof BillingInfo;
+  placeholder: string;
+  required: boolean;
+}> = [
   { name: "firstName", placeholder: "First Name", required: true },
   { name: "lastName", placeholder: "Last Name", required: true },
   { name: "address1", placeholder: "Address Line 1", required: true },
-  { name: "address2", placeholder: "Address Line 2 (Optional)", required: false },
+  {
+    name: "address2",
+    placeholder: "Address Line 2 (Optional)",
+    required: false,
+  },
   { name: "country", placeholder: "Country", required: true },
   { name: "city", placeholder: "City", required: true },
   { name: "state", placeholder: "State / Province", required: true },
@@ -64,8 +76,8 @@ const PaymentPage = () => {
             No Booking In Progress
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            We couldn&apos;t find a booking to pay for. Please start your search again from a
-            resort page.
+            We couldn&apos;t find a booking to pay for. Please start your search
+            again from a resort page.
           </p>
           <Link
             href="/resort-directory"
@@ -102,7 +114,9 @@ const PaymentPage = () => {
   const { resort, search, unitType, nights, totalPoints } = draft;
   const isPoints = search.vacationType === "exchange";
   const resortName = getResortName(resort);
-  const cashTotalWithTax = !isPoints ? getCashTotalWithTax(unitType, nights) : 0;
+  const cashTotalWithTax = !isPoints
+    ? getCashTotalWithTax(unitType, nights, resort)
+    : 0;
 
   const handleBillingChange = (field: keyof BillingInfo, value: string) => {
     const updated = { ...billingInfo, [field]: value };
@@ -135,8 +149,15 @@ const PaymentPage = () => {
       router.push(`/confirmation?bookingId=${encodeURIComponent(booking._id)}`);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Something went wrong. Please try again.";
-      Swal.fire({ icon: "error", title: "Booking failed", text: message, confirmButtonColor: "#0077be" });
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.";
+      Swal.fire({
+        icon: "error",
+        title: "Booking failed",
+        text: message,
+        confirmButtonColor: "#0077be",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +180,9 @@ const PaymentPage = () => {
               : "bg-blue-50 dark:bg-white/5 border-[#0077be]/20 dark:border-white/10"
           }`}
         >
-          <h2 className="font-bold text-gray-800 dark:text-white mb-2">Booking Summary</h2>
+          <h2 className="font-bold text-gray-800 dark:text-white mb-2">
+            Booking Summary
+          </h2>
           <div className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
             <p>
               <span className="font-semibold">Resort:</span> {resortName}
@@ -256,8 +279,8 @@ const PaymentPage = () => {
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 You are about to redeem{" "}
-                <strong>{totalPoints?.toLocaleString()} Interval points</strong> for this
-                vacation. No card payment is required.
+                <strong>{totalPoints?.toLocaleString()} Interval points</strong>{" "}
+                for this vacation. No card payment is required.
               </p>
             </div>
           )}
@@ -277,9 +300,13 @@ const PaymentPage = () => {
                   type="text"
                   placeholder={field.placeholder}
                   value={billingInfo[field.name] ?? ""}
-                  onChange={(event) => handleBillingChange(field.name, event.target.value)}
+                  onChange={(event) =>
+                    handleBillingChange(field.name, event.target.value)
+                  }
                   className={`w-full border border-gray-300 dark:border-white/20 bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:outline-none transition-all ${
-                    isPoints ? "focus:ring-[#18294B]/30" : "focus:ring-[#0077be]/30"
+                    isPoints
+                      ? "focus:ring-[#18294B]/30"
+                      : "focus:ring-[#0077be]/30"
                   }`}
                   required={field.required}
                 />
@@ -290,7 +317,9 @@ const PaymentPage = () => {
           {/* Submit bar */}
           <div className="sticky bottom-0 bg-white dark:bg-[#16223d] border-t border-gray-200 dark:border-white/10 shadow-lg p-4 -mx-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-t-xl sm:rounded-none">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">You will be charged</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                You will be charged
+              </p>
               {isPoints ? (
                 <p className="text-xl font-bold text-[#18294B] dark:text-[#7fb8e6]">
                   {totalPoints?.toLocaleString()} points
@@ -310,7 +339,11 @@ const PaymentPage = () => {
                   : "bg-[#0077be] hover:bg-[#005a8e] disabled:bg-gray-300 dark:disabled:bg-white/10"
               }`}
             >
-              {isSubmitting ? "Processing..." : isPoints ? "Confirm Redemption" : "Confirm Payment"}
+              {isSubmitting
+                ? "Processing..."
+                : isPoints
+                  ? "Confirm Redemption"
+                  : "Confirm Payment"}
             </button>
           </div>
         </form>

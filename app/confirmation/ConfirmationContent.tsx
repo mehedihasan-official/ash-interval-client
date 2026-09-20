@@ -1,7 +1,7 @@
 "use client";
 
-import ResortImage from "@/components/resorts/ResortImage";
 import BookingSteps from "@/components/resorts/BookingSteps";
+import ResortImage from "@/components/resorts/ResortImage";
 import { clearBookingDraft, loadBookingDraft } from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import { getCashTotalWithTax, type BookingDraft } from "@/lib/types/booking";
@@ -40,7 +40,8 @@ const ConfirmationContent = () => {
             {bookingId && (
               <>
                 {" "}
-                Confirmation number: <span className="font-mono font-semibold">{bookingId}</span>
+                Confirmation number:{" "}
+                <span className="font-mono font-semibold">{bookingId}</span>
               </>
             )}
           </p>
@@ -58,7 +59,9 @@ const ConfirmationContent = () => {
   const { resort, search, unitType, nights, totalPoints, checkInAs } = draft;
   const isPoints = search.vacationType === "exchange";
   const resortName = getResortName(resort);
-  const cashTotalWithTax = !isPoints ? getCashTotalWithTax(unitType, nights) : 0;
+  const cashTotalWithTax = !isPoints
+    ? getCashTotalWithTax(unitType, nights, resort)
+    : 0;
 
   return (
     <div className="min-h-[70vh] bg-gray-50 dark:bg-[#0f172a] px-4 py-8">
@@ -74,7 +77,8 @@ const ConfirmationContent = () => {
             Booking Confirmed!
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            A confirmation has been recorded for your upcoming stay at {resortName}.
+            A confirmation has been recorded for your upcoming stay at{" "}
+            {resortName}.
           </p>
           {bookingId && (
             <p className="mt-3 inline-block bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-full px-4 py-1.5 text-sm font-mono text-gray-700 dark:text-gray-300">
@@ -95,7 +99,9 @@ const ConfirmationContent = () => {
               />
             </div>
             <div className="p-4 grow">
-              <h2 className="text-lg font-bold text-[#18294B] dark:text-white">{resortName}</h2>
+              <h2 className="text-lg font-bold text-[#18294B] dark:text-white">
+                {resortName}
+              </h2>
               {resort.location && (
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-3 flex items-center gap-1.5">
                   <FaMapMarkerAlt className="shrink-0" />
@@ -107,7 +113,8 @@ const ConfirmationContent = () => {
                   <span className="font-semibold">Unit:</span> {unitType}
                 </p>
                 <p>
-                  <span className="font-semibold">Checking in as:</span> {checkInAs}
+                  <span className="font-semibold">Checking in as:</span>{" "}
+                  {checkInAs}
                 </p>
                 <p>
                   <span className="font-semibold">Check-in:</span>{" "}
@@ -132,12 +139,13 @@ const ConfirmationContent = () => {
             <p className="text-sm text-gray-700 dark:text-gray-300">
               {isPoints ? (
                 <>
-                  <strong>{totalPoints?.toLocaleString()} points</strong> redeemed for this stay.
+                  <strong>{totalPoints?.toLocaleString()} points</strong>{" "}
+                  redeemed for this stay.
                 </>
               ) : (
                 <>
-                  <strong>${cashTotalWithTax.toFixed(2)} USD</strong> charged for this stay (tax
-                  included).
+                  <strong>${cashTotalWithTax.toFixed(2)} USD</strong> charged
+                  for this stay (tax included).
                 </>
               )}
             </p>

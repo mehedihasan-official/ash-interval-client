@@ -7,7 +7,11 @@
 // page, which is where an actual unit gets picked.
 import { useAuth } from "@/lib/providers/AuthProvider";
 import type { BookingSearch } from "@/lib/types/booking";
-import { isDisneyResort, type Resort } from "@/lib/types/resort";
+import {
+  isDisneyResort,
+  type Resort,
+} from "@/lib/types/resort";
+import { getAvailableUnitTypes, getCashPricePerNight, getPointsPerNight } from "@/lib/types/booking";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
@@ -17,22 +21,6 @@ type VacationType = "exchange" | "getaways";
 interface ExchangeGetawaysProps {
   resort: Resort;
 }
-
-const POINTS_TIERS = [
-  { unit: "Studio", price: "2,000" },
-  { unit: "1 Bedroom", price: "3,000 – 4,000" },
-  { unit: "2 Bedroom", price: "4,000 – 5,000" },
-  { unit: "3 Bedroom", price: "5,000 – 7,000" },
-  { unit: "4+ Bedroom", price: "8,000 – 12,000" },
-];
-
-const CASH_TIERS = [
-  { unit: "Studio", price: "$50/night" },
-  { unit: "1 Bedroom", price: "$60/night" },
-  { unit: "2 Bedroom", price: "$72/night" },
-  { unit: "3 Bedroom", price: "$80/night" },
-  { unit: "4+ Bedroom", price: "$100/night" },
-];
 
 const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
   const { user } = useAuth();
@@ -46,6 +34,12 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
 
   const today = new Date().toISOString().split("T")[0];
   const isExchange = isDisney || vacationType === "exchange";
+  const pricingTiers = getAvailableUnitTypes(resort).map((unitType) => ({
+    unit: unitType,
+    price: isExchange
+      ? `${getPointsPerNight(unitType, resort).toLocaleString()} pts/night`
+      : `$${getCashPricePerNight(unitType, resort).toLocaleString()}/night`,
+  }));
 
   // Validates the search, then hands off to the available-unit page for
   // this resort. Travel dates + guests are passed as a query string (the
@@ -110,11 +104,6 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
     );
   };
 
-  const disneyPointsTiers = [
-    { unit: "Studio", price: "3,500" },
-    { unit: "1 Bedroom", price: "5,000" },
-  ];
-
   return (
     <div className="bg-white dark:bg-[#16223d] border border-gray-200 dark:border-white/10 rounded-lg p-4 md:p-6">
       {/* Exchange / Getaways toggle */}
@@ -171,12 +160,7 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
               : "Book with cash at our competitive Last Call rates."}
         </p>
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-          {(isDisney
-            ? disneyPointsTiers
-            : isExchange
-              ? POINTS_TIERS
-              : CASH_TIERS
-          ).map((tier) => (
+          {pricingTiers.map((tier) => (
             <div
               key={tier.unit}
               className={`bg-white rounded p-2 text-center border ${

@@ -4,7 +4,7 @@ import ResortImage from "@/components/resorts/ResortImage";
 import { saveBookingDraft } from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import {
-  CASH_PRICE_PER_NIGHT,
+  getCashPricePerNight,
   getAvailableUnitTypes,
   getCashTotal,
   getNights,
@@ -57,6 +57,13 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
   const nights = getNights(search.earliestDate, search.latestDate);
   const resortName = getResortName(resort);
   const availableUnitTypes = getAvailableUnitTypes(resort);
+  const configuredUnitTypes = resort.unitPricing?.length
+    ? availableUnitTypes.filter((unitType) =>
+        resort.unitPricing?.some(
+          (unit) => unit.unitType === unitType && unit.availableUnits > 0,
+        ),
+      )
+    : availableUnitTypes;
 
   const handleSelectUnit = (unitType: UnitType) => {
     const bookingSearch = {
@@ -70,7 +77,7 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
       unitType,
       nights,
       checkInAs: "Member",
-      cashSubtotal: !isExchange ? getCashTotal(unitType, nights) : undefined,
+      cashSubtotal: !isExchange ? getCashTotal(unitType, nights, resort) : undefined,
       totalPoints: isExchange
         ? getPointsTotal(unitType, nights, resort)
         : undefined,
@@ -212,7 +219,7 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
           Select Available Unit
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {availableUnitTypes.map((unitType) => (
+          {configuredUnitTypes.map((unitType) => (
             <div
               key={unitType}
               className="group border-2 border-white dark:border-white/10 bg-white dark:bg-[#16223d] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:border-gray-200 dark:hover:border-white/20 transition-all duration-300"
@@ -249,14 +256,14 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
                   ) : (
                     <>
                       <p className="text-3xl font-black text-[#0077be] dark:text-[#7fb8e6]">
-                        ${getCashTotal(unitType, nights).toLocaleString()}
+                        ${getCashTotal(unitType, nights, resort).toLocaleString()}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest mt-1">
                         total price
                       </p>
                       <div className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 rounded-lg p-3 border border-gray-100 dark:border-white/10">
                         <span className="font-bold text-[#0077be] dark:text-[#7fb8e6]">
-                          ${CASH_PRICE_PER_NIGHT[unitType]}
+                          ${getCashPricePerNight(unitType, resort)}
                         </span>
                         /night &times; {nights} nights
                       </div>

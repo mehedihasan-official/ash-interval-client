@@ -4,10 +4,16 @@
 // the backend's message on failure). See SERVER_NOTES.md for the exact
 // backend routes/schema these calls expect — that server code lives in the
 // separate interval-ash-server repo, not in this frontend project.
-import firebaseApp, { isFirebaseConfigured } from "@/lib/firebase/firebase.config";
+import firebaseApp, {
+  isFirebaseConfigured,
+} from "@/lib/firebase/firebase.config";
 import type { CabinKey, Cruise } from "@/lib/types/cruise";
 import type { Airport, CabinClass, Flight } from "@/lib/types/flight";
-import type { ApiResponse, Resort } from "@/lib/types/resort";
+import type {
+  ApiResponse,
+  Resort,
+  ResortUnitPricing,
+} from "@/lib/types/resort";
 import { getAuth } from "firebase/auth";
 
 function getApiBaseUrl(): string {
@@ -84,7 +90,9 @@ export interface AdminUser {
 
 // The backend can respond with either a bare array or an object wrapping
 // one, same normalization pattern used for bookings in lib/api/bookings.ts.
-function normalizeUserList(result: AdminUser[] | { users?: AdminUser[] } | null): AdminUser[] {
+function normalizeUserList(
+  result: AdminUser[] | { users?: AdminUser[] } | null,
+): AdminUser[] {
   if (!result) return [];
   if (Array.isArray(result)) return result;
   return Array.isArray(result.users) ? result.users : [];
@@ -92,7 +100,9 @@ function normalizeUserList(result: AdminUser[] | { users?: AdminUser[] } | null)
 
 /** Fetches every registered user, admins and regular members alike. */
 export async function fetchAllUsers(): Promise<AdminUser[]> {
-  const result = await apiFetch<AdminUser[] | { users?: AdminUser[] }>("/all-users");
+  const result = await apiFetch<AdminUser[] | { users?: AdminUser[] }>(
+    "/all-users",
+  );
   return normalizeUserList(result);
 }
 
@@ -102,7 +112,10 @@ export async function fetchAllUsers(): Promise<AdminUser[]> {
  * is disabled for the admin's own row) and should also be enforced
  * server-side as a defense-in-depth measure.
  */
-export async function updateUserRole(email: string, isAdmin: boolean): Promise<AdminUser> {
+export async function updateUserRole(
+  email: string,
+  isAdmin: boolean,
+): Promise<AdminUser> {
   return apiFetch<AdminUser>("/update-user", {
     method: "PATCH",
     body: JSON.stringify({ email, isAdmin }),
@@ -129,6 +142,7 @@ export interface CreateResortInput {
   img2: string;
   img3: string;
   img4: string;
+  unitPricing: ResortUnitPricing[];
 }
 
 /** Creates a new resort listing. Admin-only on the backend. */
@@ -226,7 +240,9 @@ export interface CreateAirportInput {
  * that touches a new airport — the flight endpoint rejects codes it
  * doesn't already know.
  */
-export async function createAirport(input: CreateAirportInput): Promise<Airport> {
+export async function createAirport(
+  input: CreateAirportInput,
+): Promise<Airport> {
   return apiFetch<Airport>("/airports", {
     method: "POST",
     body: JSON.stringify(input),

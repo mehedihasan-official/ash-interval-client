@@ -23,6 +23,7 @@ export interface Resort {
   nearestAirport?: string;
   checkInDays?: string[];
   pricePerNight?: number;
+  unitPricing?: ResortUnitPricing[];
   img?: string;
   img2?: string;
   img3?: string;
@@ -34,6 +35,39 @@ export interface Resort {
   // documents in the imported dataset to pass through untouched.
   [key: string]: unknown;
 }
+
+export type ResortUnitType =
+  | "Studio"
+  | "1 Bedroom"
+  | "2 Bedroom"
+  | "3 Bedroom"
+  | "4+ Bedroom";
+
+export interface ResortUnitPricing {
+  unitType: ResortUnitType;
+  availableUnits: number;
+  beds: number;
+  pointsPerNight: number;
+  cashPerNight: number;
+}
+
+export const RESORT_UNIT_TYPES: ResortUnitType[] = [
+  "Studio",
+  "1 Bedroom",
+  "2 Bedroom",
+  "3 Bedroom",
+  "4+ Bedroom",
+];
+
+export const DEFAULT_UNIT_PRICING: ResortUnitPricing[] = RESORT_UNIT_TYPES.map(
+  (unitType, index) => ({
+    unitType,
+    availableUnits: 0,
+    beds: index,
+    pointsPerNight: [2000, 3500, 4500, 6000, 10000][index],
+    cashPerNight: [50, 60, 72, 80, 100][index],
+  }),
+);
 
 export interface ResortPagination {
   page: number;
