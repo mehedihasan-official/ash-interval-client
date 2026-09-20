@@ -91,16 +91,16 @@ export const getResortUnitPricing = (
         availableUnits:
           typeof unit.availableUnits === "number"
             ? unit.availableUnits
-            : fallback?.availableUnits ?? 0,
-        beds: typeof unit.beds === "number" ? unit.beds : fallback?.beds ?? 0,
+            : (fallback?.availableUnits ?? 0),
+        beds: typeof unit.beds === "number" ? unit.beds : (fallback?.beds ?? 0),
         pointsPerNight:
           typeof unit.pointsPerNight === "number"
             ? unit.pointsPerNight
-            : fallback?.pointsPerNight ?? 0,
+            : (fallback?.pointsPerNight ?? 0),
         cashPerNight:
           typeof unit.cashPerNight === "number"
             ? unit.cashPerNight
-            : fallback?.cashPerNight ?? 0,
+            : (fallback?.cashPerNight ?? 0),
       };
     });
   }

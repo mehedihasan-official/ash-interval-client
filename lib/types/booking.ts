@@ -29,9 +29,7 @@ export const getAvailableUnitTypes = (resort?: Resort | null): UnitType[] => {
   }
 
   return getResortUnitPricing(resort)
-    .filter(
-      (unit) => unit.availableUnits > 0,
-    )
+    .filter((unit) => unit.availableUnits > 0)
     .map((unit) => unit.unitType);
 };
 
