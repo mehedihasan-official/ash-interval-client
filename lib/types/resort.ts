@@ -80,33 +80,32 @@ export const getResortUnitPricing = (
       .map((unit) => [unit.unitType, unit]),
   );
 
-  const defaultUnits = DEFAULT_UNIT_PRICING.map((fallback) => {
-    const unit = configured.get(fallback.unitType);
-    return {
-      unitType: fallback.unitType,
-      availableUnits:
-        typeof unit?.availableUnits === "number"
-          ? unit.availableUnits
-          : fallback.availableUnits,
-      beds: typeof unit?.beds === "number" ? unit.beds : fallback.beds,
-      pointsPerNight:
-        typeof unit?.pointsPerNight === "number"
-          ? unit.pointsPerNight
-          : fallback.pointsPerNight,
-      cashPerNight:
-        typeof unit?.cashPerNight === "number"
-          ? unit.cashPerNight
-          : fallback.cashPerNight,
-    };
-  });
+  if (resort?.unitPricing?.length) {
+    return [...configured.values()].map((unit) => {
+      const fallback = DEFAULT_UNIT_PRICING.find(
+        (defaultUnit) => defaultUnit.unitType === unit.unitType,
+      );
 
-  const customUnits = [...configured.values()].filter(
-    (unit) => !RESORT_UNIT_TYPES.includes(unit.unitType),
-  );
+      return {
+        unitType: unit.unitType,
+        availableUnits:
+          typeof unit.availableUnits === "number"
+            ? unit.availableUnits
+            : fallback?.availableUnits ?? 0,
+        beds: typeof unit.beds === "number" ? unit.beds : fallback?.beds ?? 0,
+        pointsPerNight:
+          typeof unit.pointsPerNight === "number"
+            ? unit.pointsPerNight
+            : fallback?.pointsPerNight ?? 0,
+        cashPerNight:
+          typeof unit.cashPerNight === "number"
+            ? unit.cashPerNight
+            : fallback?.cashPerNight ?? 0,
+      };
+    });
+  }
 
-  return resort?.unitPricing?.length
-    ? [...defaultUnits, ...customUnits]
-    : defaultUnits;
+  return DEFAULT_UNIT_PRICING;
 };
 
 export const getResortUnitLabel = (unit: ResortUnitPricing): string => {

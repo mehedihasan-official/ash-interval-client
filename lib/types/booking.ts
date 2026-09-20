@@ -30,10 +30,7 @@ export const getAvailableUnitTypes = (resort?: Resort | null): UnitType[] => {
 
   return getResortUnitPricing(resort)
     .filter(
-      (unit) =>
-        unit.availableUnits > 0 &&
-        (!isDisneyResort(resort) ||
-          DISNEY_UNIT_TYPES.includes(unit.unitType as "Studio" | "1 Bedroom")),
+      (unit) => unit.availableUnits > 0,
     )
     .map((unit) => unit.unitType);
 };
