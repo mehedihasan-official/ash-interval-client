@@ -497,7 +497,7 @@ const FlightResultCard = ({
             ${flight.pricing.discountedPrice.toFixed(2)}
           </p>
           <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
-            47% Member Savings
+            23% Member Savings
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {TRIP_PRICE_LABEL[tripType]}
