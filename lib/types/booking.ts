@@ -3,8 +3,11 @@
 // on the resort page's Exchange/Getaways panel so the numbers a visitor sees
 // while browsing stay consistent all the way through checkout.
 import {
+  getBookableUnitPricing,
   getResortUnitPricing,
+  hasConfiguredUnitPricing,
   isDisneyResort,
+  toFiniteNumber,
   type Resort,
   type ResortUnitType,
 } from "@/lib/types/resort";
@@ -23,14 +26,15 @@ export const UNIT_TYPES: UnitType[] = [
 
 export const DISNEY_UNIT_TYPES: UnitType[] = ["Studio", "1 Bedroom"];
 
+// Which unit types a member can pick, decided by the shape of the resort
+// document: resorts without their own `unitPricing` offer the standard unit
+// types; resorts with `unitPricing` offer the units configured on them.
 export const getAvailableUnitTypes = (resort?: Resort | null): UnitType[] => {
-  if (!resort?.unitPricing?.length) {
+  if (!hasConfiguredUnitPricing(resort)) {
     return isDisneyResort(resort) ? DISNEY_UNIT_TYPES : UNIT_TYPES;
   }
 
-  return getResortUnitPricing(resort)
-    .filter((unit) => unit.availableUnits > 0)
-    .map((unit) => unit.unitType);
+  return getBookableUnitPricing(resort).map((unit) => unit.unitType);
 };
 
 // Roughly how many guests each unit type comfortably sleeps — shown on the
@@ -63,10 +67,11 @@ export const getPointsPerNight = (
   resort?: Resort | null,
 ): number => {
   const configured = resort?.unitPricing?.find(
-    (unit) => unit.unitType === unitType,
+    (unit) => unit?.unitType === unitType,
   );
-  if (typeof configured?.pointsPerNight === "number") {
-    return configured.pointsPerNight;
+  const configuredPoints = toFiniteNumber(configured?.pointsPerNight);
+  if (configuredPoints !== undefined) {
+    return configuredPoints;
   }
 
   if (isDisneyResort(resort)) {

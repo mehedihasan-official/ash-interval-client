@@ -10,6 +10,7 @@ import type { BookingSearch } from "@/lib/types/booking";
 import {
   EXCHANGE_FEE_ADDITIONAL_NIGHT,
   EXCHANGE_FEE_FIRST_NIGHT,
+  getAvailableUnitTypes,
   getCashPricePerNight,
   getExchangeFee,
   getPointsPerNight,
@@ -42,6 +43,8 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
 
   const today = new Date().toISOString().split("T")[0];
   const isExchange = isDisney || vacationType === "exchange";
+  // The unit types a member will actually be able to pick on the next page.
+  const bookableUnitTypes = new Set(getAvailableUnitTypes(resort));
   const pricingTiers = getResortUnitPricing(resort).map((unit) => ({
     ...unit,
     price: isExchange
@@ -186,7 +189,12 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
                 {tier.price}
               </p>
               <p className="text-[10px] text-gray-500 mt-1">
-                {tier.availableUnits} available · {tier.beds}{" "}
+                {tier.availableUnits > 0
+                  ? `${tier.availableUnits} available`
+                  : bookableUnitTypes.has(tier.unitType)
+                    ? "Available"
+                    : "Unavailable"}{" "}
+                · {tier.beds}{" "}
                 {tier.beds === 1 ? "bed" : "beds"}
               </p>
             </div>

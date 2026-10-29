@@ -64,6 +64,39 @@ export const DEFAULT_UNIT_PRICING: ResortUnitPricing[] = RESORT_UNIT_TYPES.map(
   }),
 );
 
+// The resort collection holds two shapes of document:
+//   1. Legacy imports with no `unitPricing` at all — every unit type is
+//      offered at the frontend's default pricing (DEFAULT_UNIT_PRICING).
+//   2. Resorts that carry their own `unitPricing` array — each unit type is
+//      offered at the points/cash rate stored on the resort.
+// Everything below branches on which shape it is given, so both book the same way.
+
+// Mongo/JSON can hand numbers back as numeric strings; accept those too
+// rather than silently falling back to default pricing.
+export const toFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const getValidConfiguredUnits = (
+  resort?: Pick<Resort, "unitPricing"> | null,
+): ResortUnitPricing[] => {
+  if (!Array.isArray(resort?.unitPricing)) return [];
+  return resort.unitPricing.filter(
+    (unit): unit is ResortUnitPricing =>
+      typeof unit?.unitType === "string" && unit.unitType.trim().length > 0,
+  );
+};
+
+/** True when the resort document carries its own unit pricing (shape 2). */
+export const hasConfiguredUnitPricing = (
+  resort?: Pick<Resort, "unitPricing"> | null,
+): boolean => getValidConfiguredUnits(resort).length > 0;
+
 /**
  * Returns the unit pricing stored on a resort, using the frontend values only
  * for unit types or numeric fields that the database did not provide.
@@ -72,15 +105,10 @@ export const getResortUnitPricing = (
   resort?: Pick<Resort, "unitPricing"> | null,
 ): ResortUnitPricing[] => {
   const configured = new Map(
-    (resort?.unitPricing ?? [])
-      .filter(
-        (unit): unit is ResortUnitPricing =>
-          typeof unit?.unitType === "string" && unit.unitType.trim().length > 0,
-      )
-      .map((unit) => [unit.unitType, unit]),
+    getValidConfiguredUnits(resort).map((unit) => [unit.unitType, unit]),
   );
 
-  if (resort?.unitPricing?.length) {
+  if (configured.size > 0) {
     return [...configured.values()].map((unit) => {
       const fallback = DEFAULT_UNIT_PRICING.find(
         (defaultUnit) => defaultUnit.unitType === unit.unitType,
@@ -89,18 +117,12 @@ export const getResortUnitPricing = (
       return {
         unitType: unit.unitType,
         availableUnits:
-          typeof unit.availableUnits === "number"
-            ? unit.availableUnits
-            : (fallback?.availableUnits ?? 0),
-        beds: typeof unit.beds === "number" ? unit.beds : (fallback?.beds ?? 0),
+          toFiniteNumber(unit.availableUnits) ?? fallback?.availableUnits ?? 0,
+        beds: toFiniteNumber(unit.beds) ?? fallback?.beds ?? 0,
         pointsPerNight:
-          typeof unit.pointsPerNight === "number"
-            ? unit.pointsPerNight
-            : (fallback?.pointsPerNight ?? 0),
+          toFiniteNumber(unit.pointsPerNight) ?? fallback?.pointsPerNight ?? 0,
         cashPerNight:
-          typeof unit.cashPerNight === "number"
-            ? unit.cashPerNight
-            : (fallback?.cashPerNight ?? 0),
+          toFiniteNumber(unit.cashPerNight) ?? fallback?.cashPerNight ?? 0,
       };
     });
   }
@@ -108,10 +130,28 @@ export const getResortUnitPricing = (
   return DEFAULT_UNIT_PRICING;
 };
 
-export const getResortUnitLabel = (unit: ResortUnitPricing): string => {
-  if (unit.unitType === "Studio") return "Studio";
-  return unit.beds > 0 ? `${unit.beds} Bedroom` : unit.unitType;
+/**
+ * The units a member can pick for a resort that has its own `unitPricing`.
+ *
+ * `availableUnits` is a stock count. When at least one unit has stock, the
+ * resort is actively tracking inventory, so only the units in stock are
+ * offered. When every count is 0 (stock was never filled in, or the resort
+ * was created with the default counts) nothing is being tracked, so every
+ * configured unit is offered rather than hiding the whole resort.
+ */
+export const getBookableUnitPricing = (
+  resort?: Pick<Resort, "unitPricing"> | null,
+): ResortUnitPricing[] => {
+  const units = getResortUnitPricing(resort);
+  const inStock = units.filter((unit) => unit.availableUnits > 0);
+  return inStock.length > 0 ? inStock : units;
 };
+
+// `unitType` already names the unit ("1 Bedroom"); `beds` is a bed count and
+// does not always match it (e.g. a "1 Bedroom" listed with 6 beds), so it is
+// not used to build the label.
+export const getResortUnitLabel = (unit: ResortUnitPricing): string =>
+  unit.unitType;
 
 export interface ResortPagination {
   page: number;

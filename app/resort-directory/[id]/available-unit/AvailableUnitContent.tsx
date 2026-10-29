@@ -337,10 +337,12 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
                     <FaUtensils className="text-blue-400 shrink-0" />
                     <span>Unit: Full Kitchen Facilities</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <FaBed className="text-gray-400 shrink-0" />
-                    <span>Sleeps up to {UNIT_SLEEPS[unitType]} guests</span>
-                  </div>
+                  {UNIT_SLEEPS[unitType] && (
+                    <div className="flex items-center gap-2">
+                      <FaBed className="text-gray-400 shrink-0" />
+                      <span>Sleeps up to {UNIT_SLEEPS[unitType]} guests</span>
+                    </div>
+                  )}
                 </div>
 
                 <button
