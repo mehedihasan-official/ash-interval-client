@@ -31,6 +31,11 @@ const ADDON_DAILY = {
   additionalDriver: 12,
 } as const;
 
+// Points conversion for add-ons: 25 points per $1 ($0.04/pt), the same
+// rate the payment step uses to turn the cash total into points.
+const ADDON_POINTS_PER_DOLLAR = 25;
+const toPoints = (cash: number) => Math.round(cash * ADDON_POINTS_PER_DOLLAR);
+
 const formatMoney = (value: number) =>
   value.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
@@ -250,6 +255,7 @@ const CarDriversPage = () => {
                   }
                   title="Damage & theft insurance"
                   price={`${formatMoney(ADDON_DAILY.insurance)}/day`}
+                  points={`${toPoints(ADDON_DAILY.insurance).toLocaleString()} pts/day`}
                 />
                 <AddOnRow
                   active={addOns.gps}
@@ -258,6 +264,7 @@ const CarDriversPage = () => {
                   }
                   title="GPS navigation"
                   price={`${formatMoney(ADDON_DAILY.gps)}/day`}
+                  points={`${toPoints(ADDON_DAILY.gps).toLocaleString()} pts/day`}
                 />
                 <AddOnRow
                   active={addOns.childSeat}
@@ -266,6 +273,7 @@ const CarDriversPage = () => {
                   }
                   title="Child safety seat"
                   price={`${formatMoney(ADDON_DAILY.childSeat)}/day`}
+                  points={`${toPoints(ADDON_DAILY.childSeat).toLocaleString()} pts/day`}
                 />
                 <AddOnRow
                   active={addOns.additionalDriver}
@@ -274,6 +282,7 @@ const CarDriversPage = () => {
                   }
                   title="Additional driver"
                   price={`${formatMoney(ADDON_DAILY.additionalDriver)}/day`}
+                  points={`${toPoints(ADDON_DAILY.additionalDriver).toLocaleString()} pts/day`}
                 />
               </div>
             </section>
@@ -308,7 +317,11 @@ const CarDriversPage = () => {
                 {addOnsCash > 0 && (
                   <div className="flex justify-between text-gray-700 dark:text-gray-200">
                     <span>Add-ons estimate</span>
-                    <span>{formatMoney(addOnsCash)}</span>
+                    <span>
+                      {paymentMethod === "cash"
+                        ? formatMoney(addOnsCash)
+                        : `${toPoints(addOnsCash).toLocaleString()} pts`}
+                    </span>
                   </div>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 pt-1">
@@ -357,11 +370,13 @@ const AddOnRow = ({
   onToggle,
   title,
   price,
+  points,
 }: {
   active: boolean;
   onToggle: (value: boolean) => void;
   title: string;
   price: string;
+  points: string;
 }) => (
   <label className="flex items-center justify-between gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer hover:border-[#0077be]/50">
     <div className="flex items-center gap-3">
@@ -373,7 +388,12 @@ const AddOnRow = ({
       />
       <span className="text-sm text-gray-800 dark:text-white">{title}</span>
     </div>
-    <span className="text-xs text-gray-500 dark:text-gray-400">{price}</span>
+    <span className="text-right text-xs text-gray-500 dark:text-gray-400">
+      {price}
+      <span className="block font-semibold text-[#0077be] dark:text-[#7fb8e6]">
+        or {points}
+      </span>
+    </span>
   </label>
 );
 

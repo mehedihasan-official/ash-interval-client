@@ -38,17 +38,15 @@ Returns the signed-in member's current balances.
 
 Body: `{ "email": string, "points": number }`
 
-Converts `points` into cash at a **30% commission** and credits the result
-to `cashBalance`. Recompute everything server-side — never trust a
-client-sent amount:
+Converts `points` into cash at **$0.05 per point with no commission**
+(100,000 points = $5,000) and credits the result to `cashBalance`.
+Recompute everything server-side — never trust a client-sent amount:
 
 ```js
 const POINTS_TO_USD_RATE = 0.05;        // 1 point = $0.05 (matches lib/api/wallet.ts)
-const COMMISSION_RATE = 0.3;            // 30%
 
 grossAmount = points * POINTS_TO_USD_RATE;
-commissionAmount = grossAmount * COMMISSION_RATE;
-netAmount = grossAmount - commissionAmount;
+netAmount = grossAmount;                // no commission is deducted
 ```
 
 Validation (return `400` with a clear `message` on failure):
@@ -70,11 +68,10 @@ Response:
   "success": true,
   "data": {
     "points": 500,           // updated balance
-    "cashBalance": 17.5,     // updated balance
+    "cashBalance": 25,       // updated balance
     "pointsConverted": 500,
     "grossAmount": 25,
-    "commissionAmount": 7.5,
-    "netAmount": 17.5
+    "netAmount": 25
   }
 }
 ```
@@ -193,3 +190,23 @@ Resort," and saves via the new `PATCH /api/resorts/:id` above. Non-admins
 and signed-out visitors never see the icon and the route itself is behind
 the same admin guard as the rest of `/dashboard/admin/*`.
 
+
+---
+
+# Pricing parity with the client (flights, cars, exchange fee)
+
+The client now shows these figures; the server recomputes totals on
+booking, so update it to match or confirmations will show the old numbers.
+
+- **Flights — member discount is 23%** (was 47%): `discountedPrice =
+  retailPrice * 0.77`. The flight detail page re-prices the fare at 23%
+  (`withMemberDiscount` in `lib/types/flight.ts`) and saves it to the draft;
+  the points fare is scaled by the same change, plus the 10% processing fee.
+- **Flight add-ons** (`FLIGHT_ADDON_PRICING`): seat $45 / 1,125 pts per
+  seat (was $15 / 375), extra checked bag $85 / 2,125 pts (was $35 / 875).
+- **Car add-ons** are shown in points at 25 pts per $1 (e.g. insurance
+  $18/day = 450 pts/day), the same rate used to convert cash to points.
+- **Resort exchange fee** (points bookings): $59 for the first night + $20
+  for each additional night, shown on `/resort-directory/:id` and on the
+  available-unit page. It is display-only for now; it is not yet added to
+  checkout/payment totals or sent to the server.

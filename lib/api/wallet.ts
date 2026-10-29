@@ -55,20 +55,15 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-// The commission the backend deducts when converting points to cash.
-// Kept here too (not just server-side) purely so the UI can preview the
-// payout before the member submits — the backend is the source of truth
-// and re-applies this same rate when it processes the conversion.
-export const POINTS_CONVERSION_COMMISSION_RATE = 0.3;
-
 // How many points a member is granted the moment their account is created.
 // Applied server-side inside POST /users (see SERVER_NOTES.md) so it can
 // never be triggered twice for the same account.
 export const SIGNUP_BONUS_POINTS = 1000;
 
-// USD value of a single point when converting to cash, before commission.
-// Mirrors POINTS_PER_NIGHT / CASH_PRICE_PER_NIGHT in lib/types/booking.ts —
-// a Studio night costs 2000 points or $50, so 1 point ≈ $0.05.
+// USD value of a single point when converting to cash: 5 cents per point,
+// no commission (100,000 points = $5,000). Kept here so the UI can preview
+// the payout before the member submits — the backend is the source of truth
+// and applies this same rate when it processes the conversion.
 export const POINTS_TO_USD_RATE = 0.05;
 
 export interface WalletSummary {
@@ -80,8 +75,8 @@ export interface ConvertPointsResult {
   points: number;
   cashBalance: number;
   pointsConverted: number;
+  // Cash credited to the wallet (points x $0.05; no commission is taken).
   grossAmount: number;
-  commissionAmount: number;
   netAmount: number;
 }
 
@@ -91,8 +86,8 @@ export async function fetchWallet(email: string): Promise<WalletSummary> {
 }
 
 /**
- * Converts a given number of points into cash at a 30% commission rate and
- * credits the result to the member's cash wallet. The backend recomputes
+ * Converts a given number of points into cash at $0.05 per point (no
+ * commission) and credits the result to the member's cash wallet. The backend recomputes
  * the payout itself (never trusts a client-sent amount) and rejects the
  * request if the member doesn't have enough points.
  */

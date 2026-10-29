@@ -4,9 +4,12 @@ import ResortImage from "@/components/resorts/ResortImage";
 import { saveBookingDraft } from "@/lib/bookingDraft";
 import { formatIsoDate } from "@/lib/dateFormat";
 import {
+  EXCHANGE_FEE_ADDITIONAL_NIGHT,
+  EXCHANGE_FEE_FIRST_NIGHT,
   getAvailableUnitTypes,
   getCashPricePerNight,
   getCashTotal,
+  getExchangeFee,
   getNights,
   getPointsPerNight,
   getPointsTotal,
@@ -61,6 +64,8 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
   const isDisney = isDisneyResort(resort);
   const isExchange = isDisney || search.vacationType === "exchange";
   const nights = getNights(search.earliestDate, search.latestDate);
+  const exchangeFee = getExchangeFee(nights);
+  const additionalNights = Math.max(0, nights - 1);
   const resortName = getResortName(resort);
   const availableUnitTypes = getAvailableUnitTypes(resort);
   const configuredUnitTypes = availableUnitTypes;
@@ -186,6 +191,30 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
               </p>
             </div>
           </div>
+
+          {isExchange && (
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-[#18294B]/15 dark:border-white/10 bg-[#18294B]/5 dark:bg-white/5 px-4 py-3">
+              <div>
+                <p className="text-gray-800 dark:text-white text-sm font-bold">
+                  Exchange Fee
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ${EXCHANGE_FEE_FIRST_NIGHT} first night
+                  {additionalNights > 0 && (
+                    <>
+                      {" "}
+                      + {additionalNights} additional{" "}
+                      {additionalNights === 1 ? "night" : "nights"}{" "}
+                      &times; ${EXCHANGE_FEE_ADDITIONAL_NIGHT} each
+                    </>
+                  )}
+                </p>
+              </div>
+              <p className="text-xl font-black text-[#18294B] dark:text-[#7fb8e6]">
+                ${exchangeFee.toLocaleString()}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Resort summary */}
@@ -260,6 +289,15 @@ const AvailableUnitContent = ({ resort }: AvailableUnitContentProps) => {
                           {getPointsPerNight(unitType, resort).toLocaleString()}
                         </span>{" "}
                         pts/night &times; {nights} nights
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[11px] bg-gray-50 dark:bg-white/5 rounded-lg px-3 py-2 border border-gray-100 dark:border-white/10">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          + Exchange fee ({nights}{" "}
+                          {nights === 1 ? "night" : "nights"})
+                        </span>
+                        <span className="font-bold text-[#18294B] dark:text-[#7fb8e6]">
+                          ${exchangeFee.toLocaleString()}
+                        </span>
                       </div>
                     </>
                   ) : (

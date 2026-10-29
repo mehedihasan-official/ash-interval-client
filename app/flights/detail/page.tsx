@@ -2,12 +2,18 @@
 
 // Flight detail page. Reads the in-progress booking from sessionStorage
 // (populated by the results page's Select button), lets the member pick
-// cash vs points, then hands off to /flights/passengers. No pricing is
-// computed here — those numbers come straight from `flight.pricing` on
-// the server response so the client can't accidentally drift.
+// cash vs points, then hands off to /flights/passengers. The fare starts
+// from `flight.pricing` on the server response and is re-priced at the
+// current member discount (see withMemberDiscount) before it is shown and
+// saved back to the draft for the following steps.
 import { loadFlightDraft, updateFlightDraft } from "@/lib/flightDraft";
 import type { FlightDraft } from "@/lib/flightDraft";
-import { fareWeightForParty, type TripType } from "@/lib/types/flight";
+import {
+  FLIGHT_MEMBER_DISCOUNT_RATE,
+  fareWeightForParty,
+  withMemberDiscount,
+  type TripType,
+} from "@/lib/types/flight";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -76,7 +82,9 @@ const FlightDetailPage = () => {
 
   const { flight } = draft;
   const totalTravelers = draft.adults + draft.children + draft.infants;
-  const pricing = flight.pricing;
+  // Re-priced at the current member discount so every figure on this page
+  // (and the draft handed to the next steps) agrees with the discount shown.
+  const pricing = withMemberDiscount(flight.pricing);
 
   // pricing is one traveler's fare for the whole itinerary; the party
   // total scales it by who's actually flying.
@@ -89,7 +97,7 @@ const FlightDetailPage = () => {
   const partyPoints = Math.round(pricing.totalPoints * fareWeight);
 
   const handleContinue = () => {
-    updateFlightDraft({ paymentMethod });
+    updateFlightDraft({ paymentMethod, flight: { ...flight, pricing } });
     router.push("/flights/passengers");
   };
 
@@ -198,7 +206,7 @@ const FlightDetailPage = () => {
                   value={formatMoney(pricing.retailPrice)}
                 />
                 <FareRow
-                  label="Interval Member discount (47%)"
+                  label={`Member discount (${Math.round(FLIGHT_MEMBER_DISCOUNT_RATE * 100)}%)`}
                   value={`-${formatMoney(pricing.retailPrice - pricing.discountedPrice)}`}
                   highlight
                 />

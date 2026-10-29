@@ -196,7 +196,7 @@ const CarDetailPage = () => {
                   value={formatMoney(pricing.subtotal)}
                 />
                 <FareRow
-                  label="Interval member discount"
+                  label="Member discount"
                   value={`-${formatMoney(pricing.memberDiscount)}`}
                   highlight
                 />
@@ -207,8 +207,8 @@ const CarDetailPage = () => {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Add-ons (insurance, GPS, extras) are optional and priced on
-                  the next step.
+                  Add-ons (insurance, GPS, extras) are optional and priced in
+                  cash or points on the next step.
                 </p>
               </div>
             </section>
@@ -228,7 +228,7 @@ const CarDetailPage = () => {
                 <PaymentOption
                   active={paymentMethod === "points"}
                   onSelect={() => setPaymentMethod("points")}
-                  title="Pay with Interval Points"
+                  title="Pay with Points"
                   subtitle="Includes 10% processing fee"
                   amount={`${formatPoints(pricing.totalPoints)} pts`}
                   detail={`Base: ${formatPoints(pricing.pointsRequired)} pts + fee ${formatPoints(pricing.processingFee)} pts`}

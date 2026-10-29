@@ -7,7 +7,13 @@
 // page, which is where an actual unit gets picked.
 import { useAuth } from "@/lib/providers/AuthProvider";
 import type { BookingSearch } from "@/lib/types/booking";
-import { getCashPricePerNight, getPointsPerNight } from "@/lib/types/booking";
+import {
+  EXCHANGE_FEE_ADDITIONAL_NIGHT,
+  EXCHANGE_FEE_FIRST_NIGHT,
+  getCashPricePerNight,
+  getExchangeFee,
+  getPointsPerNight,
+} from "@/lib/types/booking";
 import {
   getResortUnitLabel,
   getResortUnitPricing,
@@ -186,11 +192,37 @@ const ExchangeGetaways = ({ resort }: ExchangeGetawaysProps) => {
             </div>
           ))}
         </div>
+        {isExchange && (
+          <div className="mt-3 rounded-lg bg-white/10 border border-white/20 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold text-white">Exchange Fee</p>
+              <p className="text-sm text-white">
+                <span className="font-bold">${EXCHANGE_FEE_FIRST_NIGHT}</span>{" "}
+                for the first night +{" "}
+                <span className="font-bold">${EXCHANGE_FEE_ADDITIONAL_NIGHT}</span>{" "}
+                for every additional night
+              </p>
+            </div>
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
+              {[1, 2, 3, 7].map((stayNights) => (
+                <div
+                  key={stayNights}
+                  className="rounded bg-white/10 px-2 py-1.5 text-gray-100"
+                >
+                  {stayNights} {stayNights === 1 ? "night" : "nights"}
+                  <span className="block text-sm font-bold text-white">
+                    ${getExchangeFee(stayNights)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <p className="text-xs text-gray-200 mt-2">
           {isDisney
             ? "* Disney resorts show points pricing only; cash is not displayed for these properties."
             : isExchange
-              ? "* Final points will be calculated based on the total number of nights selected."
+              ? "* Final points and the exchange fee will be calculated based on the total number of nights selected."
               : "* Prices shown before tax."}
         </p>
       </div>

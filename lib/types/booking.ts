@@ -100,6 +100,18 @@ export const getCashPricePerNight = (
 // Flat tax + fees applied to a cash (Getaways) booking at checkout.
 export const CASH_TAXES_AND_FEES = 20;
 
+// Exchange (points) bookings carry a cash exchange fee: a flat fee for the
+// first night plus a smaller fee for every additional night of the stay.
+export const EXCHANGE_FEE_FIRST_NIGHT = 59;
+export const EXCHANGE_FEE_ADDITIONAL_NIGHT = 20;
+
+export const getExchangeFee = (nights: number): number => {
+  const stayNights = Math.max(1, Math.floor(nights) || 1);
+  return (
+    EXCHANGE_FEE_FIRST_NIGHT + (stayNights - 1) * EXCHANGE_FEE_ADDITIONAL_NIGHT
+  );
+};
+
 export interface BookingSearch {
   earliestDate: string; // yyyy-mm-dd
   latestDate: string; // yyyy-mm-dd

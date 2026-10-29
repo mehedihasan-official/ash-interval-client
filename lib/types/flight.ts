@@ -135,12 +135,44 @@ export interface FlightBooking extends CreateFlightBookingInput {
   updatedAt?: string;
 }
 
+// Add-on prices use the same 25 points per $1 rate as before ($0.04/pt).
 export const FLIGHT_ADDON_PRICING = {
-  seatCash: 15,
-  seatPoints: 375,
-  baggageCash: 35,
-  baggagePoints: 875,
+  seatCash: 45,
+  seatPoints: 1125,
+  baggageCash: 85,
+  baggagePoints: 2125,
 } as const;
+
+// Member discount off the retail fare, shown on the flight detail page.
+export const FLIGHT_MEMBER_DISCOUNT_RATE = 0.23;
+
+// Share of the points fare charged as a processing fee (matches the
+// "10% fee" shown on the detail page's points option).
+const FLIGHT_POINTS_FEE_RATE = 0.1;
+
+/**
+ * Re-prices a flight at the current member discount. Cash is derived from
+ * the retail fare; the points fare is scaled by the same change so cash
+ * and points stay in step. Always derived from `retailPrice` (never
+ * compounded on the discounted price), so applying it twice is harmless.
+ */
+export const withMemberDiscount = (pricing: FlightPricing): FlightPricing => {
+  const discountedPrice =
+    Math.round(
+      pricing.retailPrice * (1 - FLIGHT_MEMBER_DISCOUNT_RATE) * 100,
+    ) / 100;
+  const scale =
+    pricing.discountedPrice > 0 ? discountedPrice / pricing.discountedPrice : 1;
+  const pointsRequired = Math.round(pricing.pointsRequired * scale);
+  const processingFee = Math.round(pointsRequired * FLIGHT_POINTS_FEE_RATE);
+  return {
+    ...pricing,
+    discountedPrice,
+    pointsRequired,
+    processingFee,
+    totalPoints: pointsRequired + processingFee,
+  };
+};
 
 // Mirrors PASSENGER_FARE_WEIGHT on the server (utils/flight-pricing.ts)
 // so the Booking Summary previews the same total the server will
