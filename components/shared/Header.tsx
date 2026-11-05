@@ -188,18 +188,16 @@ const Header = () => {
         <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#18294B] dark:bg-[#101b30]">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="flex items-baseline gap-1.5"
+            className="flex shrink-0 items-center"
           >
-            <span className="text-white text-lg font-bold lowercase tracking-tight">
-              interval
-            </span>
-            <span className="text-white text-xs font-semibold flex items-baseline gap-0.5">
-              5
-              <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-white" />
-            </span>
-            <span className="text-white/80 text-[10px] font-medium tracking-wide">
-              YEARS
-            </span>
+            <Image
+              src="/Interval50-Pub.svg"
+              alt="Interval 50 Years"
+              width={223}
+              height={40}
+              priority
+              className="h-auto w-36 sm:w-40"
+            />
           </Link>
           <button
             onClick={() => setIsMenuOpen(true)}
